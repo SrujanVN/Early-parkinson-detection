@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #e9f5ff;
+  --card: #ffffff;
+  --text: #1f2937;
+  --primary: #2563eb;
+  --secondary: #0284c7;
+  --accent: #06b6d4;
+}
+
+body {
+  @apply bg-background font-sans text-text;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+.glassmorphism {
+  @apply bg-white/10 backdrop-blur-sm border border-white/20 shadow-glass;
+}
+
+/* Hologram effects */
+.hologram {
+  @apply relative overflow-hidden;
+}
+
+.hologram::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-radial from-primary/20 to-transparent opacity-70 pointer-events-none;
+}
+
+.hologram-glow {
+  @apply absolute inset-0 bg-primary/10 animate-pulse-slow pointer-events-none;
+}
+
+.chat-message {
+  @apply p-4 rounded-2xl max-w-[80%];
+}
+
+.user-message {
+  @apply bg-primary/10 ml-auto;
+}
+
+.bot-message {
+  @apply bg-white mr-auto;
+}
