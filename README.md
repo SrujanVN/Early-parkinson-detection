@@ -33,9 +33,3 @@ Early-parkinson-detection/
 🔗 <a href=["https://breast-cancer-early-detection.netlify.app](https://early-parkinsons-detection.netlify.app/)">** Early Parkinson's Detection **</a>
 
 
-**Steps**  
-
-1. Clone the repository  
-```bash
-git clone https://github.com/SrujanVN/Early-parkinson-detection.git  
-cd Early-parkinson-detection  
