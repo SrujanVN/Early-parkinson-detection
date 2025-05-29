@@ -27,7 +27,11 @@ Early-parkinson-detection/
 - TensorFlow >= 2.9  
 - scikit-learn  
 - OpenCV  
-- SHAP, LIME, Matplotlib  
+- SHAP, LIME, Matplotlib
+
+  ## 🎯 Live Demo  
+🔗 <a href=["https://breast-cancer-early-detection.netlify.app](https://early-parkinsons-detection.netlify.app/)">** Early Parkinson's Detection **</a>
+
 
 **Steps**  
 
