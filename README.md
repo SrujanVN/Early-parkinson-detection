@@ -86,28 +86,33 @@ The frontend will run at: [http://localhost:5173/](http://localhost:5173/)
 ## 📁 Project Structure
 
 ```
-Early-parkinson-detection/
-│
-├── backend/                   # Flask backend + ML model
-│   ├── app.py                 # Main Flask app
-│   ├── requirements.txt       # Python dependencies
-│   ├── models/                # Saved ML/DL models (.h5, .pkl, etc.)
-│   ├── static/                # Static assets if needed
-│   └── templates/             # HTML templates (if any)
-│
-├── frontend/                  # React + TypeScript + TailwindCSS
+.
+├── backend/
+│   ├── app.py
+│   ├── models/                  # Trained ML models
+│   │   ├── deep_learning_model.h5
+│   │   └── random_forest_model.pkl
+│   ├── uploads/                 # Uploaded files
+│   └── requirements.txt
+├── frontend/
 │   ├── src/
-│   │   ├── components/        # Reusable UI components
-│   │   ├── pages/             # App pages (Home, Upload, Results)
-│   │   ├── services/          # API calls to Flask backend
-│   │   ├── App.tsx            # Main entry component
-│   │   └── main.tsx           # React DOM entry
-│   ├── public/                # Static frontend assets
-│   ├── package.json           # Frontend dependencies
-│   └── tailwind.config.js     # Tailwind configuration
-│
-├── README.md                  # Project documentation
-└── .gitignore                 # Ignore unnecessary files
+│   │   ├── components/           # Modular components
+│   │   │   ├── chatbot/          # Chatbot UI
+│   │   │   ├── hologram/         # Hologram viewer
+│   │   │   ├── home/             # Landing page sections
+│   │   │   ├── report/           # Report generation
+│   │   │   ├── ui/               # Reusable UI components
+│   │   │   └── upload/           # File upload & results
+│   │   ├── layout/               # Navbar, footer, app structure
+│   │   ├── pages/                # Route-level components
+│   │   ├── utils/                # Helper services & APIs
+│   │   ├── App.tsx
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── package.json
+│   └── vite.config.js
+└── README.md
+
 ```
 
 ---
