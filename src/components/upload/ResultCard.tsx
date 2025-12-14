@@ -11,6 +11,18 @@ export interface PredictionResult {
   gradCamUrl?: string;
   spectrogramUrl?: string;
   reportId: string;
+  ensembleInfo?: {
+    num_models: number;
+    consensus_probability: number;
+    ensemble_confidence: number;
+    std_dev: number;
+    individual_predictions: Record<string, number>;
+  };
+  gradcam?: {
+    available: boolean;
+    image_base64?: string;
+    layer_used?: string;
+  };
 }
 
 interface ResultCardProps {
@@ -103,19 +115,64 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
             </p>
           </div>
 
-          {/* Visualization */}
-          {(result.gradCamUrl || result.spectrogramUrl) && (
+          {/* Ensemble Information */}
+          {result.ensembleInfo && (
+            <div className="mt-6 border rounded-xl p-4 bg-blue-50">
+              <h4 className="text-sm font-semibold mb-3 text-blue-900">
+                🎯 Ensemble Prediction
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Models Used:</span>
+                  <span className="font-medium">{result.ensembleInfo.num_models} models</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Ensemble Confidence:</span>
+                  <span className="font-medium">
+                    {(result.ensembleInfo.ensemble_confidence * 100).toFixed(1)}%
+                  </span>
+                </div>
+                {Object.keys(result.ensembleInfo.individual_predictions).length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-blue-200">
+                    <p className="text-xs text-gray-600 mb-2">Individual Model Predictions:</p>
+                    <div className="space-y-1">
+                      {Object.entries(result.ensembleInfo.individual_predictions).map(([model, prob]) => (
+                        <div key={model} className="flex justify-between text-xs">
+                          <span className="text-gray-600">{model}:</span>
+                          <span className="font-medium">{(prob * 100).toFixed(1)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* GradCAM Visualization */}
+          {(result.gradcam?.image_base64 || result.gradCamUrl || result.spectrogramUrl) && (
             <div className="mt-6 border rounded-xl p-3">
               <h4 className="text-sm font-medium mb-2">
-                {fileType === 'Audio' ? 'Spectrogram Analysis' : 'Visual Analysis'}
+                {result.gradcam?.available ? '🔍 GradCAM Heatmap' : 
+                 fileType === 'Audio' ? 'Spectrogram Analysis' : 'Visual Analysis'}
               </h4>
+              {result.gradcam?.layer_used && (
+                <p className="text-xs text-gray-500 mb-2">
+                  Layer: {result.gradcam.layer_used}
+                </p>
+              )}
               <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                 <img 
-                  src={result.gradCamUrl || result.spectrogramUrl} 
-                  alt="Analysis visualization"
+                  src={result.gradcam?.image_base64 || result.gradCamUrl || result.spectrogramUrl} 
+                  alt="GradCAM heatmap visualization"
                   className="w-full h-full object-cover"
                 />
               </div>
+              {result.gradcam?.available && (
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Red/yellow areas indicate regions the AI focused on for prediction
+                </p>
+              )}
             </div>
           )}
         </CardBody>

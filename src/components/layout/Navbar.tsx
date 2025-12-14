@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Brain, Menu, X } from 'lucide-react';
+import { Brain, Menu, X, LogIn, LogOut, User } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,7 +53,7 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -62,6 +65,39 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            
+            {/* Auth Buttons */}
+            <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-gray-200">
+              {isAuthenticated ? (
+                <>
+                  <div className="flex items-center space-x-2 text-sm text-text/70">
+                    <User className="w-4 h-4" />
+                    <span className="hidden lg:inline">{user?.email}</span>
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                      {user?.role}
+                    </span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await logout();
+                      navigate('/');
+                    }}
+                    className="flex items-center space-x-1 text-text hover:text-primary transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className="flex items-center space-x-1 text-text hover:text-primary transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Login</span>
+                </Link>
+              )}
+            </div>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -94,6 +130,41 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            
+            {/* Mobile Auth Section */}
+            <div className="pt-4 border-t border-gray-200">
+              {isAuthenticated ? (
+                <>
+                  <div className="flex items-center space-x-2 py-2 text-sm text-text/70">
+                    <User className="w-4 h-4" />
+                    <span>{user?.email}</span>
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                      {user?.role}
+                    </span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await logout();
+                      navigate('/');
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center space-x-2 w-full py-2 text-text hover:text-primary transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center space-x-2 py-2 text-text hover:text-primary transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Login</span>
+                </Link>
+              )}
+            </div>
           </motion.nav>
         )}
       </div>

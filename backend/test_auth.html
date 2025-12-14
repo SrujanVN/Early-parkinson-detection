@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Test - Parkinson's Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .result.show {
+            display: block;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .user-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .user-info.show {
+            display: block;
+        }
+        .logout-btn {
+            background: #dc3545;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Authentication Test</h1>
+        
+        <div id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="test@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter password" required>
+            </div>
+            <button onclick="login()">Login</button>
+            <button onclick="register()" style="background: #28a745;">Register</button>
+        </div>
+
+        <div id="registerForm" style="display: none;">
+            <div class="form-group">
+                <label for="regEmail">Email:</label>
+                <input type="email" id="regEmail" placeholder="newuser@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password:</label>
+                <input type="password" id="regPassword" placeholder="Min 6 characters" required>
+            </div>
+            <div class="form-group">
+                <label for="role">Role:</label>
+                <select id="role">
+                    <option value="Patient">Patient</option>
+                    <option value="Researcher">Researcher</option>
+                </select>
+            </div>
+            <button onclick="register()" style="background: #28a745;">Register</button>
+            <button onclick="showLogin()">Back to Login</button>
+        </div>
+
+        <div id="result" class="result"></div>
+        <div id="userInfo" class="user-info"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        
+        function showResult(message, isSuccess) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'} show`;
+        }
+
+        function showUserInfo(user) {
+            const userInfoDiv = document.getElementById('userInfo');
+            userInfoDiv.innerHTML = `
+                <h3>✅ Logged In</h3>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Role:</strong> ${user.role}</p>
+                <p><strong>ID:</strong> ${user.id}</p>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            `;
+            userInfoDiv.classList.add('show');
+            document.getElementById('loginForm').style.display = 'none';
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showResult('Please enter both email and password', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('Login successful!', true);
+                    showUserInfo(data.user);
+                    
+                    // Test protected endpoint
+                    testProtectedEndpoint();
+                } else {
+                    showResult(`Error: ${data.error}`, false);
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, false);
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById('regEmail')?.value || document.getElementById('email').value;
+            const password = document.getElementById('regPassword')?.value || document.getElementById('password').value;
+            const role = document.getElementById('role')?.value || 'Patient';
+
+            if (!email || !password) {
+                showResult('Please enter both email and password', false);
+                return;
+            }
+
+            if (password.length < 6) {
+                showResult('Password must be at least 6 characters', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password, role })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`Registration successful! User ID: ${data.user_id}`, true);
+                    setTimeout(() => {
+                        document.getElementById('email').value = email;
+                        showLogin();
+                    }, 1500);
+                } else {
+                    showResult(`Error: ${data.error}`, false);
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, false);
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch(`${API_BASE}/api/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('Logout successful!', true);
+                    document.getElementById('userInfo').classList.remove('show');
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('registerForm').style.display = 'none';
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, false);
+            }
+        }
+
+        async function testProtectedEndpoint() {
+            try {
+                const response = await fetch(`${API_BASE}/api/me`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                console.log('Protected endpoint test:', data);
+            } catch (error) {
+                console.error('Protected endpoint error:', error);
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        // Add toggle button
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const registerBtn = document.createElement('button');
+            registerBtn.textContent = 'New User? Register';
+            registerBtn.style.background = '#17a2b8';
+            registerBtn.onclick = showRegister;
+            loginForm.appendChild(registerBtn);
+        });
+    </script>
+</body>
+</html>

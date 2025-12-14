@@ -5,6 +5,22 @@ export interface ModelPrediction {
   confidence: number;
   gradCamUrl?: string;
   spectrogramUrl?: string;
+  timestamp?: string;
+}
+
+export interface EnsemblePrediction extends ModelPrediction {
+  ensembleInfo?: {
+    num_models: number;
+    consensus_probability: number;
+    ensemble_confidence: number;
+    std_dev: number;
+    individual_predictions: Record<string, number>;
+  };
+  gradcam?: {
+    available: boolean;
+    image_base64?: string;
+    layer_used?: string;
+  };
 }
 
 // Internal prediction logic based on file type
