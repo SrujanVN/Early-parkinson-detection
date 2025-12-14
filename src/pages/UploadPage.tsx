@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Brain } from 'lucide-react';
 import FileUploader from '../components/upload/FileUploader';
 import ResultCard, { PredictionResult } from '../components/upload/ResultCard';
-import { predictWithModel } from '../utils/modelService';
-import { storePrediction } from '../utils/api';
+import { uploadFileForPrediction, uploadXrayForEnsemblePrediction, storePrediction, FileType } from '../utils/api';
+import { useImage } from '../contexts/ImageContext';
 
 type FileType = 'MRI' | 'Handwriting' | 'Audio' | 'CSV';
 
@@ -13,6 +13,26 @@ const UploadPage: React.FC = () => {
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setUploadedImage, uploadedImage } = useImage();
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (uploadedImage.previewUrl && uploadedImage.previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(uploadedImage.previewUrl);
+      }
+    };
+  }, [uploadedImage.previewUrl]);
+
+  // Convert file to base64 for storage
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
   const handleFileUpload = async (file: File, type: FileType) => {
     setSelectedFileType(type);
@@ -20,7 +40,58 @@ const UploadPage: React.FC = () => {
     setError(null);
 
     try {
-      const prediction = await predictWithModel(file, type);
+      // Store the uploaded image for hologram view
+      const previewUrl = URL.createObjectURL(file);
+      let originalUrl: string | null = null;
+      
+      // Convert image files to base64 for storage
+      if (file.type.startsWith('image/')) {
+        try {
+          originalUrl = await fileToBase64(file);
+        } catch (e) {
+          console.error('Error converting image to base64:', e);
+          originalUrl = previewUrl; // Fallback to blob URL
+        }
+      } else {
+        originalUrl = previewUrl;
+      }
+
+      let prediction;
+      let gradcamUrl: string | null = null;
+      
+      // Use ensemble endpoint for X-ray/CT images (MRI type)
+      if (type === 'MRI') {
+        try {
+          // Try ensemble endpoint first for X-ray images
+          prediction = await uploadXrayForEnsemblePrediction(file);
+          // Store GradCAM image if available
+          if (prediction.gradcam?.image_base64) {
+            gradcamUrl = prediction.gradcam.image_base64;
+          }
+        } catch (ensembleError) {
+          // Fallback to regular endpoint if ensemble fails
+          console.log('Ensemble prediction failed, using regular endpoint:', ensembleError);
+          prediction = await uploadFileForPrediction(file, type);
+        }
+      } else {
+        // Use regular endpoint for other file types
+        prediction = await uploadFileForPrediction(file, type);
+        if (prediction.gradCamUrl) {
+          gradcamUrl = prediction.gradCamUrl;
+        }
+      }
+      
+      // Store image in context for hologram view
+      setUploadedImage({
+        file: file,
+        previewUrl: previewUrl,
+        originalUrl: originalUrl, // Store as base64 for persistence
+        gradcamUrl: gradcamUrl,
+      });
+      
+      // Cleanup: Don't revoke previewUrl immediately as it might be needed
+      // It will be cleaned up when component unmounts or new image is uploaded
+      
       const resultWithId = storePrediction(prediction);
       setResult(resultWithId);
     } catch (err) {

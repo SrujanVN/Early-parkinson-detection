@@ -1,12 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Zap } from 'lucide-react';
+import { Zap, Upload } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import HologramViewer from '../components/hologram/HologramViewer';
+import { useImage } from '../contexts/ImageContext';
 
 const HologramPage: React.FC = () => {
-  // In a real application, these URLs would come from the previous analysis
-  const imageUrl = 'https://images.pexels.com/photos/7659564/pexels-photo-7659564.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
-  const overlayUrl = 'https://images.pexels.com/photos/7659564/pexels-photo-7659564.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+  const { uploadedImage } = useImage();
+  
+  // Use uploaded image if available, otherwise use placeholder
+  const imageUrl = uploadedImage.originalUrl || uploadedImage.previewUrl || 
+    'https://images.pexels.com/photos/7659564/pexels-photo-7659564.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+  const overlayUrl = uploadedImage.gradcamUrl || 
+    (uploadedImage.originalUrl ? null : 'https://images.pexels.com/photos/7659564/pexels-photo-7659564.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
 
   return (
     <motion.div
@@ -30,11 +36,30 @@ const HologramPage: React.FC = () => {
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <HologramViewer 
-            imageUrl={imageUrl}
-            overlayUrl={overlayUrl}
-            title="Brain MRI Scan Visualization"
-          />
+          {uploadedImage.originalUrl || uploadedImage.previewUrl ? (
+            <HologramViewer 
+              imageUrl={imageUrl}
+              overlayUrl={overlayUrl || undefined}
+              title="Uploaded Image - Holographic View"
+            />
+          ) : (
+            <div className="bg-white rounded-2xl p-12 text-center shadow-neuro">
+              <div className="flex flex-col items-center">
+                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                  <Upload className="h-10 w-10 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No Image Uploaded</h3>
+                <p className="text-gray-600 mb-6 max-w-md">
+                  Upload an image on the Analysis page to view it in holographic 3D visualization
+                </p>
+                <Link to="/upload">
+                  <button className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-white rounded-lg font-medium hover:from-primary/90 hover:to-accent/90 transition-all">
+                    Go to Upload Page
+                  </button>
+                </Link>
+              </div>
+            </div>
+          )}
           
           <div className="mt-12 bg-white rounded-2xl p-6 shadow-neuro">
             <h2 className="text-xl font-semibold mb-4">Understanding the Visualization</h2>
