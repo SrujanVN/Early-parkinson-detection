@@ -4,6 +4,7 @@
 import { ModelPrediction } from './modelService';
 
 const API_BASE = 'http://127.0.0.1:5000';
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 // Store the latest prediction result
 let latestPrediction: (ModelPrediction & { reportId: string }) | null = null;
@@ -37,7 +38,8 @@ export const uploadFileForPrediction = async (
   formData.append('file', file);
   formData.append('fileType', fileType);
 
-  const response = await fetch(`${API_BASE}/predict`, {
+  const endpoint = USE_MOCK ? `${API_BASE}/api/mock/predict` : `${API_BASE}/predict`;
+  const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'include',
     body: formData,
@@ -66,7 +68,8 @@ export const uploadXrayForEnsemblePrediction = async (
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE}/api/predict/xray`, {
+  const endpoint = USE_MOCK ? `${API_BASE}/api/mock/predict/xray` : `${API_BASE}/api/predict/xray`;
+  const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'include',
     body: formData,

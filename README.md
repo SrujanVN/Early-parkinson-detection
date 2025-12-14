@@ -73,6 +73,27 @@ npm run dev
 
 The frontend will run at: [http://localhost:5173/](http://localhost:5173/)
 
+### 🔹 Development: Mock mode (fast preview without ML dependencies)
+
+If you want to run the frontend/backend without installing heavy ML libraries (TensorFlow / PyTorch), you can enable a lightweight mock mode for local development:
+
+- Frontend: create `.env.development` (or use the included one) and set:
+
+```bash
+VITE_USE_MOCK=true
+```
+
+- Backend: set the following environment variables when starting the Flask server:
+
+```powershell
+$env:DISABLE_IMAGE_MODULES='1'
+$env:DISABLE_MODELS='1'
+$env:MOCK_MODE='1'
+python backend/app.py
+```
+
+The frontend will call unauthenticated mock endpoints (`/api/mock/predict` and `/api/mock/predict/xray`) so you can exercise the upload flow and UI without models or heavy native dependencies.
+
 ---
 
 

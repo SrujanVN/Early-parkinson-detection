@@ -13,51 +13,57 @@ import secrets
 import uuid
 from werkzeug.utils import secure_filename
 
-# Try to import pandas (optional, only for CSV processing)
+# Pandas is optional and can pull in heavy C-extensions (pyarrow) that may
+# be incompatible with the local NumPy build. To avoid crashing the server at
+# import time, we defer importing pandas until CSV processing is requested.
 PANDAS_AVAILABLE = False
 pd = None
-try:
-    # Suppress warnings during import
-    import warnings
-    warnings.filterwarnings('ignore')
-    import pandas as pd
-    PANDAS_AVAILABLE = True
-except (ImportError, AttributeError, ModuleNotFoundError, Exception) as e:
-    # Pandas/pyarrow has NumPy compatibility issues - disable for now
-    PANDAS_AVAILABLE = False
-    pd = None
-    # Don't print error - just silently disable
-    pass
 
 # Import ensemble and GradCAM modules
 try:
-    from image_processor import (
-        preprocess_image_for_tensorflow, 
-        preprocess_image_for_pytorch,
-        validate_image_file,
-        save_image_temporarily,
-        cleanup_temp_file
-    )
-    from ensemble_predictor import ensemble_predictor, initialize_ensemble_models
-    from gradcam_generator import (
-        generate_gradcam_for_model,
-        encode_image_to_base64,
-        save_gradcam_image
-    )
-    IMAGE_PROCESSING_AVAILABLE = True
+    # Allow disabling heavy image/model imports via env var for quick local runs
+    DISABLE_IMAGE_MODULES = os.environ.get('DISABLE_IMAGE_MODULES', '0').lower() in ('1', 'true', 'yes')
+    if DISABLE_IMAGE_MODULES:
+        IMAGE_PROCESSING_AVAILABLE = False
+    else:
+        from image_processor import (
+            preprocess_image_for_tensorflow, 
+            preprocess_image_for_pytorch,
+            validate_image_file,
+            save_image_temporarily,
+            cleanup_temp_file
+        )
+        from ensemble_predictor import ensemble_predictor, initialize_ensemble_models
+        from gradcam_generator import (
+            generate_gradcam_for_model,
+            encode_image_to_base64,
+            save_gradcam_image
+        )
+        IMAGE_PROCESSING_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Image processing modules not available: {e}")
     IMAGE_PROCESSING_AVAILABLE = False
 
-# Try to import TensorFlow
-try:
-    import tensorflow as tf
-    TF_AVAILABLE = True
-except ImportError as e:
-    print(f"Warning: TensorFlow not available: {e}")
-    print("Server will start but predictions will not work until TensorFlow is installed.")
+# Try to import TensorFlow (can be disabled with DISABLE_MODELS env var)
+DISABLE_MODELS = os.environ.get('DISABLE_MODELS', '0').lower() in ('1', 'true', 'yes')
+_mock_env = os.environ.get('MOCK_MODE', None)
+if _mock_env is None:
+    # Enable mock mode automatically during local development if not explicitly set
+    MOCK_MODE = os.environ.get('FLASK_ENV', '').lower() in ('development', 'dev') or os.path.exists('.env.development')
+else:
+    MOCK_MODE = _mock_env.lower() in ('1', 'true', 'yes')
+if DISABLE_MODELS:
     TF_AVAILABLE = False
     tf = None
+else:
+    try:
+        import tensorflow as tf
+        TF_AVAILABLE = True
+    except ImportError as e:
+        print(f"Warning: TensorFlow not available: {e}")
+        print("Server will start but predictions will not work until TensorFlow is installed.")
+        TF_AVAILABLE = False
+        tf = None
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(32)  # Generate a secure secret key
@@ -138,6 +144,10 @@ if IMAGE_PROCESSING_AVAILABLE:
     print("="*50 + "\n")
 else:
     ensemble_initialized = False
+
+# If MOCK_MODE is enabled, we will return deterministic sample predictions
+if MOCK_MODE:
+    print("MOCK_MODE enabled: prediction endpoints will return sample responses")
 
 # Authentication decorator
 def login_required(f):
@@ -325,8 +335,14 @@ def process_audio(file):
 
 def process_csv(file):
     # Read and process CSV data
-    if not PANDAS_AVAILABLE:
-        raise ImportError("Pandas is required for CSV processing but is not available")
+    global PANDAS_AVAILABLE, pd
+    if not PANDAS_AVAILABLE or pd is None:
+        try:
+            import pandas as pd_local
+            pd = pd_local
+            PANDAS_AVAILABLE = True
+        except Exception as e:
+            raise ImportError("Pandas (and optional pyarrow) is required for CSV processing but is not available or incompatible with the current environment")
     df = pd.read_csv(file)
     # Process according to your model's requirements
     features = df.values
@@ -339,15 +355,35 @@ def predict_xray_ensemble():
     X-ray/CT Scan prediction endpoint with ensemble models and GradCAM
     Accepts X-ray or CT scan images, runs ensemble prediction, and generates GradCAM heatmaps
     """
+    # Mock mode: return a sample response without requiring models or image processing
+    if MOCK_MODE:
+        sample = {
+            'diagnosis': "Parkinson's",
+            'confidence': 0.82,
+            'ensemble_info': {
+                'num_models': 3,
+                'consensus_probability': 0.82,
+                'ensemble_confidence': 0.85,
+                'std_dev': 0.05,
+                'individual_predictions': [0.8, 0.85, 0.81]
+            },
+            'gradcam': {
+                'available': False,
+                'image_base64': None,
+                'layer_used': None
+            }
+        }
+        return jsonify(sample), 200
+
     if not IMAGE_PROCESSING_AVAILABLE:
         return jsonify({'error': 'Image processing modules not available'}), 500
-    
+
     if not ensemble_initialized:
         return jsonify({'error': 'Ensemble models not initialized'}), 500
-    
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
-    
+
     file = request.files['file']
     
     # Validate file
@@ -454,10 +490,39 @@ def predict_xray_ensemble():
             cleanup_temp_file(temp_file_path)
 
 
+@app.route('/api/mock/predict/xray', methods=['POST'])
+def mock_predict_xray():
+    """Unauthenticated mock endpoint useful for frontend testing"""
+    sample = {
+        'diagnosis': "Parkinson's",
+        'confidence': 0.82,
+        'ensemble_info': {
+            'num_models': 3,
+            'consensus_probability': 0.82,
+            'ensemble_confidence': 0.85,
+            'std_dev': 0.05,
+            'individual_predictions': [0.8, 0.85, 0.81]
+        },
+        'gradcam': {
+            'available': False,
+            'image_base64': None,
+            'layer_used': None
+        }
+    }
+    return jsonify(sample), 200
+
+
 @app.route('/predict', methods=['POST'])
 @login_required
 def predict():
     """Protected prediction endpoint"""
+    # Mock mode: return a sample response without requiring a real model
+    if MOCK_MODE:
+        return jsonify({
+            'diagnosis': "Normal",
+            'confidence': 0.23
+        }), 200
+
     if model is None:
         return jsonify({'error': 'Model not loaded'}), 500
     
@@ -493,6 +558,24 @@ def predict():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/mock/predict', methods=['POST'])
+def mock_predict():
+    """Unauthenticated mock prediction for frontend testing"""
+    return jsonify({'diagnosis': 'Normal', 'confidence': 0.23}), 200
+
+
+@app.route('/api/health', methods=['GET'])
+def health():
+    """API health/status endpoint"""
+    return jsonify({
+        'status': 'ok',
+        'mock_mode': MOCK_MODE,
+        'models_loaded': TF_AVAILABLE and model is not None,
+        'ensemble_initialized': ensemble_initialized,
+        'image_processing_available': IMAGE_PROCESSING_AVAILABLE
+    }), 200
 
 if __name__ == '__main__':
     if model is None:
