@@ -43,7 +43,7 @@ const UploadPage: React.FC = () => {
       // Store the uploaded image for hologram view
       const previewUrl = URL.createObjectURL(file);
       let originalUrl: string | null = null;
-      
+
       // Convert image files to base64 for storage
       if (file.type.startsWith('image/')) {
         try {
@@ -58,7 +58,7 @@ const UploadPage: React.FC = () => {
 
       let prediction;
       let gradcamUrl: string | null = null;
-      
+
       // Use ensemble endpoint for X-ray/CT images (MRI type)
       if (type === 'MRI') {
         try {
@@ -80,7 +80,7 @@ const UploadPage: React.FC = () => {
           gradcamUrl = prediction.gradCamUrl;
         }
       }
-      
+
       // Store image in context for hologram view
       setUploadedImage({
         file: file,
@@ -88,11 +88,13 @@ const UploadPage: React.FC = () => {
         originalUrl: originalUrl, // Store as base64 for persistence
         gradcamUrl: gradcamUrl,
       });
-      
+
       // Cleanup: Don't revoke previewUrl immediately as it might be needed
       // It will be cleaned up when component unmounts or new image is uploaded
-      
+
+      // Store prediction with all data including GradCAM and LIME
       const resultWithId = storePrediction(prediction);
+      console.log('Stored prediction with LIME:', resultWithId.lime);
       setResult(resultWithId);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to analyze the file. Please try again.';
@@ -120,7 +122,7 @@ const UploadPage: React.FC = () => {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Upload & Analyze</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Upload your medical data for powered analysis to detect potential 
+            Upload your medical data for powered analysis to detect potential
             Parkinson's disease markers with high accuracy.
           </p>
         </div>
@@ -136,10 +138,10 @@ const UploadPage: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             <div>
               <h2 className="text-xl font-semibold mb-4">Analysis Results</h2>
-              <ResultCard 
+              <ResultCard
                 result={result}
                 fileType={selectedFileType}
                 isLoading={isAnalyzing}

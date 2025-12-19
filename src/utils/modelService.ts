@@ -1,7 +1,7 @@
 import { FileType } from './api';
 
 export interface ModelPrediction {
-  diagnosis: 'Normal' | 'Parkinson\'s';
+  diagnosis: 'Normal' | 'Parkinson\'s' | 'Unknown';
   confidence: number;
   gradCamUrl?: string;
   spectrogramUrl?: string;
@@ -9,17 +9,34 @@ export interface ModelPrediction {
 }
 
 export interface EnsemblePrediction extends ModelPrediction {
-  ensembleInfo?: {
+  class_probabilities?: {
+    Normal: number;
+    Parkinsons: number;
+    Unknown: number;
+  };
+  individual_predictions?: Record<string, {
+    prediction: string;
+    confidence: number;
+    probabilities: {
+      Normal: number;
+      Parkinsons: number;
+      Unknown: number;
+    };
+  }>;
+  ensemble_info?: {
+    models_used: string[];
     num_models: number;
-    consensus_probability: number;
     ensemble_confidence: number;
-    std_dev: number;
-    individual_predictions: Record<string, number>;
+    threshold_applied: number;
   };
   gradcam?: {
     available: boolean;
     image_base64?: string;
     layer_used?: string;
+  };
+  lime?: {
+    available: boolean;
+    image_base64?: string;
   };
 }
 

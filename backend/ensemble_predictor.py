@@ -43,7 +43,7 @@ class EnsemblePredictor:
         Args:
             name: Model name (e.g., 'EfficientNetB3', 'DenseNet121')
             model_path: Path to model file
-            model_type: 'tensorflow' or 'pytorch'
+            model_type: 'tensorflow', 'pytorch', or 'sklearn'
         """
         try:
             if model_type == 'tensorflow' and TF_AVAILABLE:
@@ -54,11 +54,45 @@ class EnsemblePredictor:
                 print(f"[OK] Loaded {name} (TensorFlow) from {model_path}")
                 
             elif model_type == 'pytorch' and TORCH_AVAILABLE:
-                model = torch.load(model_path, map_location='cpu')
-                model.eval()  # Set to evaluation mode
+                try:
+                    # Import model architectures
+                    from pytorch_models import load_pytorch_model
+                    
+                    # Determine model type from name
+                    name_lower = name.lower()
+                    if 'resnet' in name_lower:
+                        arch_type = 'resnet50'
+                    elif 'densenet' in name_lower:
+                        arch_type = 'densenet121'
+                    elif 'efficientnet' in name_lower:
+                        if 'b3' in name_lower or '_b3' in name_lower:
+                            arch_type = 'efficientnet_b3'
+                        elif 'b0' in name_lower or '_b0' in name_lower:
+                            arch_type = 'efficientnet_b0'
+                        else:
+                            print(f"[WARNING] Unknown EfficientNet variant for {name}, skipping")
+                            return False
+                    else:
+                        print(f"[WARNING] Unknown PyTorch architecture for {name}, skipping")
+                        return False
+                    
+                    # Load model with architecture
+                    model = load_pytorch_model(model_path, model_type=arch_type, num_classes=3)
+                    self.models[name] = model
+                    self.model_types[name] = 'pytorch'
+                    print(f"[OK] Loaded {name} (PyTorch) from {model_path}")
+                    
+                except Exception as e:
+                    print(f"[ERROR] Failed to load PyTorch model {name}: {e}")
+                    return False
+                
+            elif model_type == 'sklearn':
+                # Load sklearn/pickle models
+                import joblib
+                model = joblib.load(model_path)
                 self.models[name] = model
-                self.model_types[name] = 'pytorch'
-                print(f"[OK] Loaded {name} (PyTorch) from {model_path}")
+                self.model_types[name] = 'sklearn'
+                print(f"[OK] Loaded {name} (sklearn/pickle) from {model_path}")
                 
             else:
                 print(f"[WARNING] {model_type} not available, skipping {name}")
@@ -117,16 +151,17 @@ class EnsemblePredictor:
                 return prob
                 
             elif model_type == 'pytorch':
-                with torch.no_grad():
-                    if isinstance(preprocessed_input, np.ndarray):
-                        preprocessed_input = torch.from_numpy(preprocessed_input)
-                    output = model(preprocessed_input)
-                    # Apply sigmoid if needed
-                    if output.dim() > 1:
-                        prob = torch.sigmoid(output[0][0]).item()
-                    else:
-                        prob = torch.sigmoid(output[0]).item()
-                    return prob
+                from pytorch_prediction_helper import predict_pytorch_3class
+                return predict_pytorch_3class(model, preprocessed_input)
+            
+            elif model_type == 'sklearn':
+                # sklearn models
+                if hasattr(model, 'predict_proba'):
+                    proba = model.predict_proba(preprocessed_input)
+                    return float(proba[0][1]) if proba.shape[1] == 2 else proba[0]
+                else:
+                    pred = model.predict(preprocessed_input)
+                    return float(pred[0])
                     
         except Exception as e:
             print(f"Error predicting with {model_name}: {e}")
@@ -214,35 +249,77 @@ def initialize_ensemble_models():
     """
     global ensemble_predictor
     
-    # For now, use the existing model
-    # Later, this will load: EfficientNetB3, DenseNet121, InceptionV3, ResNet50
+    # Model configurations for all modalities (no legacy .h5 model)
     model_configs = [
+        # MRI Models (PyTorch)
         {
-            'name': 'CurrentModel',
-            'path': 'final_parkinsons_model_complete.h5',
-            'type': 'tensorflow'
+            'name': 'MRI_DenseNet121',
+            'path': 'models/Parkinson_mri/best_densenet121.pth',
+            'type': 'pytorch'
+        },
+        {
+            'name': 'MRI_ResNet50',
+            'path': 'models/Parkinson_mri/best_resnet50.pth',
+            'type': 'pytorch'
+        },
+        {
+            'name': 'MRI_EfficientNetB0',
+            'path': 'models/Parkinson_mri/best_efficientnet_b0.pth',
+            'type': 'pytorch'
+        },
+        {
+            'name': 'MRI_EfficientNetB3',
+            'path': 'models/Parkinson_mri/best_efficientnet_b3.pth',
+            'type': 'pytorch'
+        },
+        # Handwriting Models (sklearn/pickle)
+        {
+            'name': 'Handwriting_HOG_SVM',
+            'path': 'models/Parkinson_handwriting/hog_svm_open_set.pkl',
+            'type': 'sklearn'
+        },
+        {
+            'name': 'Handwriting_LBP_RF',
+            'path': 'models/Parkinson_handwriting/lbp_rf_open_set.pkl',
+            'type': 'sklearn'
+        },
+        {
+            'name': 'Handwriting_MobileNet_SVM',
+            'path': 'models/Parkinson_handwriting/mobilenet_svm_open_set.pkl',
+            'type': 'sklearn'
+        },
+        {
+            'name': 'Handwriting_Ensemble',
+            'path': 'models/Parkinson_handwriting/parkinson_ensemble_open_set.pkl',
+            'type': 'sklearn'
+        },
+        # Voice Models (sklearn/pickle)
+        {
+            'name': 'Voice_XGBoost',
+            'path': 'models/parkinsons_voice/xgboost_parkinson_voice.pkl',
+            'type': 'sklearn'
+        },
+        {
+            'name': 'Voice_RandomForest',
+            'path': 'models/parkinsons_voice/random_forest_parkinson_voice.pkl',
+            'type': 'sklearn'
+        },
+        {
+            'name': 'Voice_SVM',
+            'path': 'models/parkinsons_voice/svm_parkinson_voice.pkl',
+            'type': 'sklearn'
+        },
+        {
+            'name': 'Voice_Ensemble',
+            'path': 'models/parkinsons_voice/ensemble_parkinson_voice.pkl',
+            'type': 'sklearn'
+        },
+        # CSV Model (XGBoost/pickle)
+        {
+            'name': 'CSV_XGBoost',
+            'path': 'models/parkinsions_csv/parkinson_xgboost.pkl',
+            'type': 'sklearn'
         }
-        # TODO: Add these when models are provided:
-        # {
-        #     'name': 'EfficientNetB3',
-        #     'path': 'models/efficientnetb3.pth',
-        #     'type': 'pytorch'
-        # },
-        # {
-        #     'name': 'DenseNet121',
-        #     'path': 'models/densenet121.pth',
-        #     'type': 'pytorch'
-        # },
-        # {
-        #     'name': 'InceptionV3',
-        #     'path': 'models/inceptionv3.pth',
-        #     'type': 'pytorch'
-        # },
-        # {
-        #     'name': 'ResNet50',
-        #     'path': 'models/resnet50.pth',
-        #     'type': 'pytorch'
-        # }
     ]
     
     # Filter out models that don't exist

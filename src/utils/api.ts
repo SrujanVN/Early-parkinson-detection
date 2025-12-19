@@ -6,7 +6,7 @@ import { ModelPrediction } from './modelService';
 const API_BASE = 'http://127.0.0.1:5000';
 
 // Store the latest prediction result
-let latestPrediction: (ModelPrediction & { reportId: string }) | null = null;
+let latestPrediction: any = null;
 
 export type FileType = 'MRI' | 'Handwriting' | 'Audio' | 'CSV';
 
@@ -49,7 +49,7 @@ export const uploadFileForPrediction = async (
   }
 
   const data = await response.json();
-  
+
   const prediction: ModelPrediction = {
     diagnosis: data.diagnosis,
     confidence: data.confidence,
@@ -65,10 +65,10 @@ export const uploadXrayForEnsemblePrediction = async (
 ): Promise<import('./modelService').EnsemblePrediction> => {
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('fileType', 'MRI');
 
-  const response = await fetch(`${API_BASE}/api/predict/xray`, {
+  const response = await fetch(`${API_BASE}/predict`, {
     method: 'POST',
-    credentials: 'include',
     body: formData,
   });
 
@@ -78,13 +78,16 @@ export const uploadXrayForEnsemblePrediction = async (
   }
 
   const data = await response.json();
-  
+
   const prediction: import('./modelService').EnsemblePrediction = {
     diagnosis: data.diagnosis,
     confidence: data.confidence,
     timestamp: new Date().toISOString(),
-    ensembleInfo: data.ensemble_info,
+    class_probabilities: data.class_probabilities,
+    individual_predictions: data.individual_predictions,
+    ensemble_info: data.ensemble_info,
     gradcam: data.gradcam,
+    lime: data.lime,
     gradCamUrl: data.gradcam?.image_base64, // For backward compatibility
   };
 
@@ -92,11 +95,12 @@ export const uploadXrayForEnsemblePrediction = async (
 };
 
 // Function to store the latest prediction
-export const storePrediction = (prediction: ModelPrediction) => {
+export const storePrediction = (prediction: any) => {
   latestPrediction = {
     ...prediction,
     reportId: `R${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`,
   };
+  console.log('Storing prediction with LIME:', latestPrediction.lime);
   return latestPrediction;
 };
 
@@ -106,13 +110,31 @@ export const getLatestPrediction = () => {
 };
 
 // Function to generate a report
-export const generateReport = async (): Promise<Blob> => {
-  // TODO: Implement actual PDF generation endpoint
-  // For now, simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  
-  // In a real application, this would call an API to generate a PDF
-  return new Blob(['Mock PDF report content'], { type: 'application/pdf' });
+export const generateReport = async (predictionData?: any): Promise<Blob> => {
+  const dataToSend = predictionData || latestPrediction;
+
+  if (!dataToSend) {
+    throw new Error('No prediction data available for report generation');
+  }
+
+  const response = await fetch(`${API_BASE}/api/generate-report`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      patientName: 'You',
+      includeXAI: true,
+      predictionData: dataToSend
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Report generation failed' }));
+    throw new Error(error.error || 'Failed to generate report');
+  }
+
+  return await response.blob();
 };
 
 // Function to send a report by email
@@ -120,7 +142,7 @@ export const sendReportByEmail = async (email: string): Promise<boolean> => {
   // TODO: Implement actual email sending endpoint
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  
+
   // In a real application, this would call an API to send an email
   return true;
 };

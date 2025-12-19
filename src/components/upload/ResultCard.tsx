@@ -1,27 +1,44 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, CheckCircle, ArrowRight, Download, Mail } from 'lucide-react';
+import { AlertTriangle, CheckCircle, ArrowRight, Download, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Card, { CardHeader, CardBody, CardFooter } from '../ui/Card';
 import Button from '../ui/Button';
 
 export interface PredictionResult {
-  diagnosis: 'Normal' | 'Parkinson\'s';
+  diagnosis: 'Normal' | 'Parkinson\'s' | 'Unknown';
   confidence: number;
   gradCamUrl?: string;
   spectrogramUrl?: string;
   reportId: string;
-  ensembleInfo?: {
+  class_probabilities?: {
+    Normal: number;
+    Parkinsons: number;
+    Unknown: number;
+  };
+  individual_predictions?: Record<string, {
+    prediction: string;
+    confidence: number;
+    probabilities: {
+      Normal: number;
+      Parkinsons: number;
+      Unknown: number;
+    };
+  }>;
+  ensemble_info?: {
+    models_used: string[];
     num_models: number;
-    consensus_probability: number;
     ensemble_confidence: number;
-    std_dev: number;
-    individual_predictions: Record<string, number>;
+    threshold_applied: number;
   };
   gradcam?: {
     available: boolean;
     image_base64?: string;
     layer_used?: string;
+  };
+  lime?: {
+    available: boolean;
+    image_base64?: string;
   };
 }
 
@@ -69,6 +86,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
   }
 
   const isParkinsons = result.diagnosis === 'Parkinson\'s';
+  const isUnknown = result.diagnosis === 'Unknown';
   const confidencePercent = (result.confidence * 100).toFixed(1);
 
   return (
@@ -85,67 +103,106 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
 
         <CardBody>
           <div className="flex flex-col items-center mb-6">
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-              isParkinsons ? 'bg-warning/10' : 'bg-success/10'
-            }`}>
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${isParkinsons ? 'bg-warning/10' : isUnknown ? 'bg-gray-100' : 'bg-success/10'
+              }`}>
               {isParkinsons ? (
                 <AlertTriangle size={36} className="text-warning" />
+              ) : isUnknown ? (
+                <HelpCircle size={36} className="text-gray-400" />
               ) : (
                 <CheckCircle size={36} className="text-success" />
               )}
             </div>
-            
-            <h3 className={`text-2xl font-bold mb-1 ${
-              isParkinsons ? 'text-warning' : 'text-success'
-            }`}>
+
+            <h3 className={`text-2xl font-bold mb-1 ${isParkinsons ? 'text-warning' : isUnknown ? 'text-gray-600' : 'text-success'
+              }`}>
               {result.diagnosis}
             </h3>
-            
+
             <div className="w-full max-w-xs bg-gray-100 rounded-full h-2.5 mb-2 mt-4">
-              <div 
-                className={`h-2.5 rounded-full ${
-                  isParkinsons ? 'bg-warning' : 'bg-success'
-                }`}
+              <div
+                className={`h-2.5 rounded-full ${isParkinsons ? 'bg-warning' : isUnknown ? 'bg-gray-400' : 'bg-success'
+                  }`}
                 style={{ width: `${confidencePercent}%` }}
               ></div>
             </div>
-            
+
             <p className="text-sm text-gray-600">
               Confidence: <span className="font-medium">{confidencePercent}%</span>
             </p>
           </div>
 
-          {/* Ensemble Information */}
-          {result.ensembleInfo && (
-            <div className="mt-6 border rounded-xl p-4 bg-blue-50">
-              <h4 className="text-sm font-semibold mb-3 text-blue-900">
-                🎯 Ensemble Prediction
+          {/* Class Probabilities */}
+          {result.class_probabilities && (
+            <div className="mt-6 border rounded-xl p-4 bg-gradient-to-br from-purple-50 to-blue-50">
+              <h4 className="text-sm font-semibold mb-3 text-purple-900">
+                📊 Class Probabilities
               </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Models Used:</span>
-                  <span className="font-medium">{result.ensembleInfo.num_models} models</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Ensemble Confidence:</span>
-                  <span className="font-medium">
-                    {(result.ensembleInfo.ensemble_confidence * 100).toFixed(1)}%
-                  </span>
-                </div>
-                {Object.keys(result.ensembleInfo.individual_predictions).length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-blue-200">
-                    <p className="text-xs text-gray-600 mb-2">Individual Model Predictions:</p>
-                    <div className="space-y-1">
-                      {Object.entries(result.ensembleInfo.individual_predictions).map(([model, prob]) => (
-                        <div key={model} className="flex justify-between text-xs">
-                          <span className="text-gray-600">{model}:</span>
-                          <span className="font-medium">{(prob * 100).toFixed(1)}%</span>
-                        </div>
-                      ))}
+              <div className="space-y-2">
+                {Object.entries(result.class_probabilities).map(([className, prob]) => (
+                  <div key={className} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">{className}:</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${className === 'Parkinsons' ? 'bg-warning' :
+                            className === 'Normal' ? 'bg-success' : 'bg-gray-400'
+                            }`}
+                          style={{ width: `${prob * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium w-12 text-right">
+                        {(prob * 100).toFixed(1)}%
+                      </span>
                     </div>
                   </div>
-                )}
+                ))}
               </div>
+            </div>
+          )}
+
+          {/* Ensemble Information */}
+          {result.ensemble_info && (
+            <div className="mt-6 border rounded-xl p-4 bg-blue-50">
+              <h4 className="text-sm font-semibold mb-3 text-blue-900">
+                🎯 Ensemble Model Analysis
+              </h4>
+              <div className="grid grid-cols-2 gap-4 mb-3">
+                <div className="text-center p-3 bg-white rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {result.ensemble_info.num_models}
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">Models Used</div>
+                </div>
+                <div className="text-center p-3 bg-white rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {(result.ensemble_info.ensemble_confidence * 100).toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">Ensemble Confidence</div>
+                </div>
+              </div>
+
+              {/* Individual Model Predictions */}
+              {result.individual_predictions && Object.keys(result.individual_predictions).length > 0 && (
+                <div className="mt-3 pt-3 border-t border-blue-200">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">Individual Model Predictions:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(result.individual_predictions).map(([model, pred]) => {
+                      const modelShort = model.replace('MRI_', '');
+                      return (
+                        <div key={model} className="bg-white rounded-lg p-2 text-xs">
+                          <div className="font-medium text-gray-800">{modelShort}:</div>
+                          <div className={`font-semibold ${pred.prediction === "Parkinson's" ? 'text-warning' :
+                            pred.prediction === 'Normal' ? 'text-success' : 'text-gray-600'
+                            }`}>
+                            {pred.prediction} ({(pred.confidence * 100).toFixed(1)}%)
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -153,8 +210,8 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
           {(result.gradcam?.image_base64 || result.gradCamUrl || result.spectrogramUrl) && (
             <div className="mt-6 border rounded-xl p-3">
               <h4 className="text-sm font-medium mb-2">
-                {result.gradcam?.available ? '🔍 GradCAM Heatmap' : 
-                 fileType === 'Audio' ? 'Spectrogram Analysis' : 'Visual Analysis'}
+                {result.gradcam?.available ? '🔍 GradCAM Heatmap' :
+                  fileType === 'Audio' ? 'Spectrogram Analysis' : 'Visual Analysis'}
               </h4>
               {result.gradcam?.layer_used && (
                 <p className="text-xs text-gray-500 mb-2">
@@ -162,8 +219,8 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
                 </p>
               )}
               <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                <img 
-                  src={result.gradcam?.image_base64 || result.gradCamUrl || result.spectrogramUrl} 
+                <img
+                  src={result.gradcam?.image_base64 || result.gradCamUrl || result.spectrogramUrl}
                   alt="GradCAM heatmap visualization"
                   className="w-full h-full object-cover"
                 />
@@ -173,6 +230,25 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
                   Red/yellow areas indicate regions the AI focused on for prediction
                 </p>
               )}
+            </div>
+          )}
+
+          {/* LIME Visualization */}
+          {result.lime?.available && result.lime?.image_base64 && (
+            <div className="mt-6 border rounded-xl p-3">
+              <h4 className="text-sm font-medium mb-2">
+                🎨 LIME Feature Importance
+              </h4>
+              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={result.lime.image_base64}
+                  alt="LIME feature importance visualization"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Green areas support the diagnosis, red areas oppose it
+              </p>
             </div>
           )}
         </CardBody>
