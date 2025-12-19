@@ -6,7 +6,6 @@ import ResultCard, { PredictionResult } from '../components/upload/ResultCard';
 import { uploadFileForPrediction, uploadXrayForEnsemblePrediction, storePrediction, FileType } from '../utils/api';
 import { useImage } from '../contexts/ImageContext';
 
-type FileType = 'MRI' | 'Handwriting' | 'Audio' | 'CSV';
 
 const UploadPage: React.FC = () => {
   const [selectedFileType, setSelectedFileType] = useState<FileType>('MRI');
@@ -81,7 +80,7 @@ const UploadPage: React.FC = () => {
         }
       }
 
-      // Store image in context for hologram view
+
       setUploadedImage({
         file: file,
         previewUrl: previewUrl,
@@ -93,13 +92,14 @@ const UploadPage: React.FC = () => {
       // It will be cleaned up when component unmounts or new image is uploaded
 
       // Store prediction with all data including GradCAM and LIME
+      console.log('API Response data:', prediction);
       const resultWithId = storePrediction(prediction);
-      console.log('Stored prediction with LIME:', resultWithId.lime);
+      console.log('Stored prediction object:', resultWithId);
       setResult(resultWithId);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to analyze the file. Please try again.';
-      setError(errorMessage);
-      console.error('Analysis error:', err);
+      setError(`Analysis Error: ${errorMessage}`);
+      console.error('Detailed Analysis error:', err);
     } finally {
       setIsAnalyzing(false);
     }
@@ -121,7 +121,7 @@ const UploadPage: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Upload & Analyze</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-text/60 max-w-2xl mx-auto">
             Upload your medical data for powered analysis to detect potential
             Parkinson's disease markers with high accuracy.
           </p>

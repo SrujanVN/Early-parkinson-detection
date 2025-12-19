@@ -30,8 +30,8 @@ const EducationSection: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Understanding Parkinson's Disease</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Knowledge is power. Learn about Parkinson's disease, its symptoms, and how early 
+          <p className="text-text/60 max-w-2xl mx-auto">
+            Knowledge is power. Learn about Parkinson's disease, its symptoms, and how early
             detection can make a significant difference.
           </p>
         </div>
@@ -51,7 +51,7 @@ const EducationSection: React.FC = () => {
                     {card.icon}
                   </div>
                   <h3 className="text-xl font-semibold mb-3">{card.title}</h3>
-                  <p className="text-gray-600">{card.description}</p>
+                  <p className="text-text/60">{card.description}</p>
                 </CardBody>
               </Card>
             </motion.div>

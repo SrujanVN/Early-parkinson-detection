@@ -8,6 +8,7 @@ import librosa
 import uuid
 from werkzeug.utils import secure_filename
 from datetime import datetime
+from google import genai
 
 # Try to import pandas (optional, only for CSV processing)
 PANDAS_AVAILABLE = False
@@ -55,13 +56,28 @@ except ImportError as e:
     TF_AVAILABLE = False
     tf = None
 
+# Gemini Configuration
+GEMINI_API_KEY = "AIzaSyAy3JIcXbmjkVB0DR22qGnS9Cn9wmLZzhQ"
+GEMINI_AVAILABLE = False
+client = None
+try:
+    # Use provided key or environment variable
+    api_key = GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
+    if api_key:
+        client = genai.Client(api_key=api_key)
+        GEMINI_AVAILABLE = True
+        print("✅ Gemini AI initialized (using new unified SDK)")
+    else:
+        print("⚠️ GEMINI_API_KEY not found")
+except Exception as e:
+    print(f"❌ Gemini initialization failed: {e}")
 app = Flask(__name__)
 
 CORS(app, 
      origins=["http://localhost:5173", "http://127.0.0.1:5173"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"],
-     expose_headers=["Content-Type"])
+     supports_credentials=True)
 
 # Database configuration removed - authentication not needed
 
@@ -648,8 +664,64 @@ def generate_report_endpoint():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/chat', methods=['POST'])
+def chat_endpoint():
+    """Gemini AI chatbot endpoint"""
+    if not GEMINI_AVAILABLE:
+        return jsonify({
+            'response': "Assistant: I'm sorry, I am currently unable to connect to my AI processing unit. Please ensure that the connection is properly configured in the system environment.",
+            'error': 'Gemini not initialized'
+        }), 503
+
+    try:
+        data = request.get_json() or {}
+        user_message = data.get('message', '')
+        history = data.get('history', [])
+
+        if not user_message:
+            return jsonify({'error': 'No message provided'}), 400
+
+        # System prompt to act as Assistant
+        system_instruction = (
+            "You are a highly professional, polite, and empathetic AI Assistant specializing in Parkinson's disease. "
+            "You are an integral part of the NeuroShield AI platform. Your primary goal is to provide helpful, clear, and "
+            "scientifically accurate information about Parkinson's disease, its symptoms, diagnosis, and care options. "
+            "Please ensure your tone is always respectful, supportive, and courteous. "
+            "Always start your response with 'Assistant: '. "
+            "While you are an advanced AI, it is imperative to remind users that your information is for educational "
+            "purposes only and does not constitute medical advice. They should always consult a qualified healthcare "
+            "professional for any medical concerns or before making health-related decisions."
+        )
+
+        # Build conversation context
+        # For the flash model, we'll use a prompt that includes the context
+        full_prompt = f"{system_instruction}\n\n"
+        for msg in history:
+            role = "User" if msg['sender'] == 'user' else "Assistant"
+            full_prompt += f"{role}: {msg['text']}\n"
+        
+        full_prompt += f"User: {user_message}\nAssistant:"
+
+        # Generate response using new SDK syntax
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=full_prompt
+        )
+        
+        response_text = response.text.strip()
+        if not response_text.startswith("Assistant:"):
+            response_text = f"Assistant: {response_text}"
+
+        return jsonify({
+            'response': response_text,
+            'model': 'gemini-2.5-flash'
+        })
+
+    except Exception as e:
+        print(f"❌ Chat error: {e}")
+        return jsonify({'error': str(e)}), 500
 if __name__ == '__main__':
     print("Starting Flask server on http://127.0.0.1:5000")
     print("All routes are publicly accessible (authentication removed)")
     print(f"Ensemble models loaded: {len(ensemble_predictor.models) if ensemble_initialized else 0}")
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

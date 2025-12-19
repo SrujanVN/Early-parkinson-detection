@@ -42,7 +42,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`p-6 border-b border-gray-100 ${className}`}>
+    <div className={`p-6 border-b border-divider ${className}`}>
       <div className="flex items-center">
         {icon && <div className="mr-3 text-primary">{icon}</div>}
         <div>
@@ -52,7 +52,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
             </h3>
           )}
           {subtitle && (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-text/60 mt-1">
               {subtitle}
             </p>
           )}
@@ -84,7 +84,7 @@ export const CardFooter: React.FC<CardFooterProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`p-6 border-t border-gray-100 ${className}`}>
+    <div className={`p-6 border-t border-divider ${className}`}>
       {children}
     </div>
   );

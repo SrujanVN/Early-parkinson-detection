@@ -26,11 +26,11 @@ const steps = [
 
 const StepsSection: React.FC = () => {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-card/50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">How Early Parkinson's Detection  Works</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-text/60 max-w-2xl mx-auto">
             Our platform uses state-of-the-art Of Early Parkinson's Detection  to analyze clinical data for early detection
             of Parkinson's symptoms, providing accessible insights.
           </p>
@@ -52,7 +52,7 @@ const StepsSection: React.FC = () => {
                   </div>
                   <div className="relative">
                     <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-                    <p className="text-gray-600">{step.description}</p>
+                    <p className="text-text/60">{step.description}</p>
                   </div>
                 </CardBody>
               </Card>

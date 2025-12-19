@@ -20,7 +20,7 @@ const ReportPage: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Medical Report</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-text/60 max-w-2xl mx-auto">
             Download or share your comprehensive medical analysis report with detailed insights and recommendations.
           </p>
         </div>

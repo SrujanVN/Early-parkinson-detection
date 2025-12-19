@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+<<<<<<< HEAD
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
+=======
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Sun, Moon } from 'lucide-react';
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark' ||
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
   const location = useLocation();
 
   useEffect(() => {
@@ -17,6 +29,16 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
+
   // Close mobile menu on navigation
   useEffect(() => {
     setIsOpen(false);
@@ -25,7 +47,6 @@ const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Analysis', path: '/upload' },
-    { name: 'Hologram', path: '/hologram' },
     { name: 'Reports', path: '/report' },
     { name: 'Assistant', path: '/chatbot' },
   ];
@@ -36,8 +57,13 @@ const Navbar: React.FC = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
       className={`sticky top-0 z-50 ${scrolled
+<<<<<<< HEAD
           ? 'bg-white shadow-md'
           : 'bg-transparent'
+=======
+        ? 'bg-card/80 backdrop-blur-lg shadow-md border-b border-divider'
+        : 'bg-transparent'
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
         } transition-all duration-300`}
     >
       <div className="container mx-auto px-4 py-4">
@@ -49,6 +75,7 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
+<<<<<<< HEAD
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
@@ -61,18 +88,67 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
           </nav>
+=======
+          <div className="hidden md:flex items-center space-x-8">
+            <nav className="flex items-center space-x-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`font-semibold hover:text-primary transition-colors ${location.pathname === link.path ? 'text-primary' : 'text-text'
+                    }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-text focus:outline-none"
-            aria-label="Toggle menu"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="p-2.5 rounded-2xl bg-card border border-divider shadow-sm text-primary hover:scale-110 active:scale-95 transition-all group"
+              aria-label="Toggle theme"
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={isDark ? 'dark' : 'light'}
+                  initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={{ opacity: 0, scale: 0.5, rotate: 180 }}
+                  transition={{ duration: 0.3, type: 'spring' }}
+                >
+                  {isDark ? (
+                    <Sun className="w-5 h-5 group-hover:text-amber-500 transition-colors" />
+                  ) : (
+                    <Moon className="w-5 h-5 group-hover:text-indigo-500 transition-colors" />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </button>
+          </div>
+
+          {/* Mobile Menu Actions */}
+          <div className="flex md:hidden items-center space-x-4">
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="p-2.5 rounded-xl bg-card border border-divider shadow-sm text-primary transition-all"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-text focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
+<<<<<<< HEAD
         {isOpen && (
           <motion.nav
             initial={{ opacity: 0, height: 0 }}
@@ -93,6 +169,30 @@ const Navbar: React.FC = () => {
             ))}
           </motion.nav>
         )}
+=======
+        <AnimatePresence>
+          {isOpen && (
+            <motion.nav
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden mt-4 py-4 space-y-4 border-t border-divider"
+            >
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`block py-2 font-semibold hover:text-primary transition-colors ${location.pathname === link.path ? 'text-primary' : 'text-text'
+                    }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </motion.nav>
+          )}
+        </AnimatePresence>
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
       </div>
     </motion.header>
   );

@@ -3,37 +3,72 @@
 @tailwind utilities;
 
 :root {
-  --background: #e9f5ff;
+  --background: #f0f7ff;
   --card: #ffffff;
   --text: #1f2937;
   --primary: #2563eb;
   --secondary: #0284c7;
   --accent: #06b6d4;
+  --border: #e5e7eb;
 }
 
+.dark {
+  --background: #030712;
+  --card: #0f172a;
+  --text: #f8fafc;
+  --primary: #3b82f6;
+  --secondary: #0ea5e9;
+  --accent: #22d3ee;
+  --border: #1e293b;
+  color-scheme: dark;
+}
+
+html,
 body {
-  @apply bg-background font-sans text-text;
+  background-color: var(--background) !important;
+  color: var(--text);
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark html,
+.dark body {
+  background-color: var(--background) !important;
+  color: var(--text);
+}
+
+body {
+  @apply font-sans;
   scroll-behavior: smooth;
 }
 
-.glassmorphism {
-  @apply bg-white/10 backdrop-blur-sm border border-white/20 shadow-glass;
+/* Ensure text follows theme color by default */
+* {
+  border-color: var(--border);
 }
 
-/* Hologram effects */
-.hologram {
+.message-highlight {
+  @apply font-bold text-primary bg-primary/5 px-1.5 py-0.5 rounded-md border border-primary/20 inline-block my-0.5;
+}
+
+.glassmorphism {
+  @apply bg-card/10 backdrop-blur-sm border shadow-glass;
+  border-color: var(--border);
+}
+
+/* Scan effects */
+.scan-effect {
   @apply relative overflow-hidden;
 }
 
-.hologram::before {
+.scan-effect::before {
   content: '';
   @apply absolute inset-0 bg-gradient-radial from-primary/20 to-transparent opacity-70 pointer-events-none;
 }
 
-.hologram-glow {
+.scan-glow {
   @apply absolute inset-0 bg-primary/10 animate-pulse-slow pointer-events-none;
 }
 
@@ -46,5 +81,6 @@ body {
 }
 
 .bot-message {
-  @apply bg-white mr-auto;
+  @apply bg-card mr-auto shadow-sm border;
+  border-color: var(--border);
 }

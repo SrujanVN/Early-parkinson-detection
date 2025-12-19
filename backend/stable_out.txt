@@ -1,0 +1,38 @@
+Configuring with key: AIzaSyAy3J...
+Listing models...
+Available model: models/gemini-2.5-flash
+Available model: models/gemini-2.5-pro
+Available model: models/gemini-2.0-flash-exp
+Available model: models/gemini-2.0-flash
+Available model: models/gemini-2.0-flash-001
+Available model: models/gemini-2.0-flash-exp-image-generation
+Available model: models/gemini-2.0-flash-lite-001
+Available model: models/gemini-2.0-flash-lite
+Available model: models/gemini-2.0-flash-lite-preview-02-05
+Available model: models/gemini-2.0-flash-lite-preview
+Available model: models/gemini-exp-1206
+Available model: models/gemini-2.5-flash-preview-tts
+Available model: models/gemini-2.5-pro-preview-tts
+Available model: models/gemma-3-1b-it
+Available model: models/gemma-3-4b-it
+Available model: models/gemma-3-12b-it
+Available model: models/gemma-3-27b-it
+Available model: models/gemma-3n-e4b-it
+Available model: models/gemma-3n-e2b-it
+Available model: models/gemini-flash-latest
+Available model: models/gemini-flash-lite-latest
+Available model: models/gemini-pro-latest
+Available model: models/gemini-2.5-flash-lite
+Available model: models/gemini-2.5-flash-image-preview
+Available model: models/gemini-2.5-flash-image
+Available model: models/gemini-2.5-flash-preview-09-2025
+Available model: models/gemini-2.5-flash-lite-preview-09-2025
+Available model: models/gemini-3-pro-preview
+Available model: models/gemini-3-flash-preview
+Available model: models/gemini-3-pro-image-preview
+Available model: models/nano-banana-pro-preview
+Available model: models/gemini-robotics-er-1.5-preview
+Available model: models/gemini-2.5-computer-use-preview-10-2025
+Available model: models/deep-research-pro-preview-12-2025
+Testing with: models/gemini-2.5-flash
+Response: Hi!

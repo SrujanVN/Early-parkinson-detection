@@ -32,7 +32,7 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 export const uploadFileForPrediction = async (
   file: File,
   fileType: FileType
-): Promise<ModelPrediction> => {
+): Promise<any> => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('fileType', fileType);
@@ -50,13 +50,10 @@ export const uploadFileForPrediction = async (
 
   const data = await response.json();
 
-  const prediction: ModelPrediction = {
-    diagnosis: data.diagnosis,
-    confidence: data.confidence,
+  return {
+    ...data,
     timestamp: new Date().toISOString(),
   };
-
-  return prediction;
 };
 
 // Function to upload X-ray/CT image for ensemble prediction with GradCAM
@@ -135,6 +132,24 @@ export const generateReport = async (predictionData?: any): Promise<Blob> => {
   }
 
   return await response.blob();
+};
+
+// Function to send a message to the chatbot
+export const sendChatMessage = async (message: string, history: any[] = []) => {
+  const response = await fetch(`${API_BASE}/api/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message, history }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Chat failed' }));
+    throw new Error(error.error || 'Chat failed');
+  }
+
+  return response.json();
 };
 
 // Function to send a report by email

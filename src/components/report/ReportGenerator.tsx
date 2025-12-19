@@ -20,7 +20,7 @@ const ReportGenerator: React.FC = () => {
       <Card>
         <CardBody className="py-16 text-center">
           <h3 className="text-xl font-semibold mb-4">No Analysis Results Available</h3>
-          <p className="text-gray-600">
+          <p className="text-text/60">
             Please complete an analysis first to generate a report.
           </p>
         </CardBody>
@@ -66,7 +66,7 @@ const ReportGenerator: React.FC = () => {
         <CardBody>
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold">Medical Analysis Report</h2>
-            <p className="text-gray-500">
+            <p className="text-text/40">
               Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
             </p>
           </div>
@@ -77,11 +77,15 @@ const ReportGenerator: React.FC = () => {
               <table className="w-full">
                 <tbody>
                   <tr>
+<<<<<<< HEAD
                     <td className="py-2 text-gray-600">Patient Name:</td>
+=======
+                    <td className="py-2 text-text/60">Patient Name:</td>
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
                     <td className="py-2 font-medium">You</td>
                   </tr>
                   <tr>
-                    <td className="py-2 text-gray-600">Analysis Date:</td>
+                    <td className="py-2 text-text/60">Analysis Date:</td>
                     <td className="py-2 font-medium">{new Date().toLocaleDateString()}</td>
                   </tr>
                 </tbody>
@@ -93,7 +97,11 @@ const ReportGenerator: React.FC = () => {
               <table className="w-full">
                 <tbody>
                   <tr>
+<<<<<<< HEAD
                     <td className="py-2 text-gray-600">Diagnosis:</td>
+=======
+                    <td className="py-2 text-text/60">Diagnosis:</td>
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
                     <td className={`py-2 font-medium ${predictionResult.diagnosis === 'Parkinson\'s'
                       ? 'text-warning'
                       : 'text-success'
@@ -102,13 +110,13 @@ const ReportGenerator: React.FC = () => {
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-2 text-gray-600">Confidence:</td>
+                    <td className="py-2 text-text/60">Confidence:</td>
                     <td className="py-2 font-medium">
                       {(predictionResult.confidence * 100).toFixed(1)}%
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-2 text-gray-600">Recommendation:</td>
+                    <td className="py-2 text-text/60">Recommendation:</td>
                     <td className="py-2 font-medium">
                       {predictionResult.diagnosis === 'Parkinson\'s'
                         ? 'Consult Neurologist'
@@ -126,8 +134,13 @@ const ReportGenerator: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {predictionResult.gradcam?.available && predictionResult.gradcam?.image_base64 && (
                   <div className="space-y-2">
+<<<<<<< HEAD
                     <p className="text-sm font-medium text-gray-500">GradCAM Heatmap</p>
                     <div className="rounded-xl overflow-hidden border border-gray-200 aspect-square">
+=======
+                    <p className="text-sm font-medium text-text/40">GradCAM Heatmap</p>
+                    <div className="rounded-xl overflow-hidden border border-divider aspect-square">
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
                       <img
                         src={predictionResult.gradcam.image_base64}
                         alt="GradCAM"
@@ -138,8 +151,13 @@ const ReportGenerator: React.FC = () => {
                 )}
                 {predictionResult.lime?.available && predictionResult.lime?.image_base64 && (
                   <div className="space-y-2">
+<<<<<<< HEAD
                     <p className="text-sm font-medium text-gray-500">LIME Feature Importance</p>
                     <div className="rounded-xl overflow-hidden border border-gray-200 aspect-square">
+=======
+                    <p className="text-sm font-medium text-text/40">LIME Feature Importance</p>
+                    <div className="rounded-xl overflow-hidden border border-divider aspect-square">
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
                       <img
                         src={predictionResult.lime.image_base64}
                         alt="LIME"
@@ -149,7 +167,11 @@ const ReportGenerator: React.FC = () => {
                   </div>
                 )}
                 {!predictionResult.gradcam?.available && !predictionResult.lime?.available && (predictionResult.gradCamUrl || predictionResult.spectrogramUrl) && (
+<<<<<<< HEAD
                   <div className="rounded-xl overflow-hidden border border-gray-200 h-64 col-span-2">
+=======
+                  <div className="rounded-xl overflow-hidden border border-divider h-64 col-span-2">
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
                     <img
                       src={predictionResult.gradCamUrl || predictionResult.spectrogramUrl}
                       alt="Analysis visualization"
@@ -163,8 +185,13 @@ const ReportGenerator: React.FC = () => {
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Analysis Summary</h3>
+<<<<<<< HEAD
             <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
               <p className="text-gray-700 leading-relaxed">
+=======
+            <div className="bg-divider/5 p-4 rounded-xl border border-divider">
+              <p className="text-text/80 leading-relaxed">
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
                 {predictionResult.diagnosis === "Parkinson's" ? (
                   <div className="space-y-4">
                     <p><b>Diagnosis:</b> The ensemble AI model has detected patterns consistent with Parkinson's disease with {(predictionResult.confidence * 100).toFixed(1)}% confidence.</p>
@@ -181,16 +208,20 @@ const ReportGenerator: React.FC = () => {
                   </div>
                 )}
               </p>
-              <div className="flex items-center mt-4 text-sm text-gray-500">
+              <div className="flex items-center mt-4 text-sm text-text/40">
                 <ClipboardCheck size={16} className="mr-2" />
                 Generated by Assistant
               </div>
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-gray-100">
+          <div className="mt-8 pt-6 border-t border-divider">
             <h3 className="text-lg font-semibold mb-4">Disclaimer</h3>
+<<<<<<< HEAD
             <p className="text-sm text-gray-500">
+=======
+            <p className="text-sm text-text/40">
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
               This report is generated by an  system and is intended for informational purposes only.
               It is not a substitute for professional medical advice, diagnosis, or treatment.
               Always seek the advice of a qualified healthcare provider with any questions regarding
@@ -215,7 +246,7 @@ const ReportGenerator: React.FC = () => {
               <input
                 type="email"
                 placeholder="Enter email address"
-                className="flex-1 rounded-xl px-4 py-2 border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                className="flex-1 rounded-xl px-4 py-2 border border-divider bg-card text-text focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-text/20"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

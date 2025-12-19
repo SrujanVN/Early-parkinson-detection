@@ -8,7 +8,6 @@ import { ImageProvider } from './contexts/ImageContext';
 // Pages
 import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
-import HologramPage from './pages/HologramPage';
 import ReportPage from './pages/ReportPage';
 import ChatbotPage from './pages/ChatbotPage';
 
@@ -27,7 +26,10 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/upload" element={<UploadPage />} />
+<<<<<<< HEAD
                 <Route path="/hologram" element={<HologramPage />} />
+=======
+>>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
                 <Route path="/report" element={<ReportPage />} />
                 <Route path="/chatbot" element={<ChatbotPage />} />
               </Routes>
