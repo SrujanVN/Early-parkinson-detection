@@ -1,25 +1,40 @@
+
 import os
 from google import genai
+import sys
 
-# Use the provided API key
-api_key = "AIzaSyAy3JIcXbmjkVB0DR22qGnS9Cn9wmLZzhQ"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-try:
-    print(f"Attempting to connect with key: {api_key[:10]}...")
-    client = genai.Client(api_key=api_key)
-    
-    response = client.models.generate_content(
-        model="gemini-1.5-flash",
-        contents="Say 'Connection successful' if you can hear me."
-    )
-    
-    print("-" * 20)
-    print("RESPONSE:")
-    print(response.text)
-    print("-" * 20)
-    print("✅ Connection test passed!")
+def test_gemini():
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        print("Client initialized")
+        
+        print("Listing available models:")
+        models = list(client.models.list())
+        found_model = None
+        for model in models:
+            print(f"  - {model.name}")
+            if "flash" in model.name.lower():
+                found_model = model.name
+        
+        print("Testing all available Flash models...")
+        for model in models:
+            if "flash" in model.name.lower():
+                try:
+                    print(f"Trying {model.name}...")
+                    response = client.models.generate_content(
+                        model=model.name,
+                        contents="Hello"
+                    )
+                    print(f"SUCCESS with {model.name}: {response.text[:50]}...")
+                    return True
+                except Exception as e:
+                    print(f"FAILED with {model.name}: {e}")
+        return False
+    except Exception as e:
+        print(f"Failed: {e}")
+        return False
 
-except Exception as e:
-    print("-" * 20)
-    print(f"❌ Connection test failed: {e}")
-    print("-" * 20)
+if __name__ == "__main__":
+    test_gemini()

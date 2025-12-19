@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+import time
 import numpy as np
 from PIL import Image
 import io
@@ -9,6 +10,11 @@ import uuid
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from google import genai
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(env_path)
 
 # Try to import pandas (optional, only for CSV processing)
 PANDAS_AVAILABLE = False
@@ -36,11 +42,8 @@ try:
         cleanup_temp_file
     )
     from ensemble_predictor import ensemble_predictor, initialize_ensemble_models
-    from gradcam_generator import (
-        generate_gradcam_for_model,
-        encode_image_to_base64,
-        save_gradcam_image
-    )
+    from handwriting_handler import register_handwriting_routes
+    from voice_handler import register_voice_routes
     IMAGE_PROCESSING_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Image processing modules not available: {e}")
@@ -57,18 +60,16 @@ except ImportError as e:
     tf = None
 
 # Gemini Configuration
-GEMINI_API_KEY = "AIzaSyAy3JIcXbmjkVB0DR22qGnS9Cn9wmLZzhQ"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_AVAILABLE = False
 client = None
 try:
-    # Use provided key or environment variable
-    api_key = GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
-    if api_key:
-        client = genai.Client(api_key=api_key)
+    if GEMINI_API_KEY:
+        client = genai.Client(api_key=GEMINI_API_KEY)
         GEMINI_AVAILABLE = True
         print("✅ Gemini AI initialized (using new unified SDK)")
     else:
-        print("⚠️ GEMINI_API_KEY not found")
+        print("⚠️ GEMINI_API_KEY not found in environment")
 except Exception as e:
     print(f"❌ Gemini initialization failed: {e}")
 app = Flask(__name__)
@@ -249,6 +250,15 @@ def predict_xray_ensemble():
         if temp_file_path:
             cleanup_temp_file(temp_file_path)
 
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "service": "parkinson-detection-api"}), 200
+
+# Register routes for isolated systems
+if IMAGE_PROCESSING_AVAILABLE:
+    register_handwriting_routes(app)
+    register_voice_routes(app)
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -622,6 +632,102 @@ def predict():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/predict/csv-features', methods=['POST'])
+def predict_csv_features():
+    """CSV feature prediction endpoint - accepts 22 voice/clinical features as JSON"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Expected feature names (22 features)
+        expected_features = [
+            'MDVP_Fo_Hz', 'MDVP_Fhi_Hz', 'MDVP_Flo_Hz', 'MDVP_Jitter_Percent',
+            'MDVP_Jitter_Abs', 'MDVP_RAP', 'MDVP_PPQ', 'Jitter_DDP',
+            'MDVP_Shimmer', 'MDVP_Shimmer_dB', 'Shimmer_APQ3', 'Shimmer_APQ5',
+            'MDVP_APQ', 'Shimmer_DDA', 'NHR', 'HNR', 'RPDE', 'DFA',
+            'spread1', 'spread2', 'D2', 'PPE'
+        ]
+        
+        # Extract and validate features
+        features = []
+        missing_features = []
+        
+        for feature_name in expected_features:
+            if feature_name in data:
+                try:
+                    value = float(data[feature_name])
+                    features.append(value)
+                except (ValueError, TypeError):
+                    return jsonify({'error': f'Invalid value for {feature_name}'}), 400
+            else:
+                missing_features.append(feature_name)
+        
+        if missing_features:
+            return jsonify({
+                'error': 'Missing features',
+                'missing': missing_features
+            }), 400
+        
+        # Convert to numpy array and reshape for model
+        features_array = np.array(features).reshape(1, -1)
+        
+        # Get CSV_XGBoost model
+        csv_model_name = 'CSV_XGBoost'
+        if csv_model_name not in ensemble_predictor.models:
+            return jsonify({'error': 'CSV model not loaded'}), 500
+        
+        csv_model = ensemble_predictor.models[csv_model_name]
+        
+        # Make prediction
+        if hasattr(csv_model, 'predict_proba'):
+            prediction_proba = csv_model.predict_proba(features_array)[0]
+            parkinsons_probability = float(prediction_proba[1])  # Class 1 = Parkinson's
+        else:
+            prediction = csv_model.predict(features_array)[0]
+            parkinsons_probability = float(prediction)
+        
+        # Determine diagnosis
+        diagnosis = "Parkinson's" if parkinsons_probability > 0.5 else 'Normal'
+        confidence = parkinsons_probability if parkinsons_probability > 0.5 else (1 - parkinsons_probability)
+        
+        # Get feature importance if available
+        feature_importance = {}
+        if hasattr(csv_model, 'feature_importances_'):
+            importances = csv_model.feature_importances_
+            # Get top 10 most important features
+            importance_pairs = list(zip(expected_features, importances))
+            importance_pairs.sort(key=lambda x: x[1], reverse=True)
+            feature_importance = {
+                name: float(importance) 
+                for name, importance in importance_pairs[:10]
+            }
+        
+        # Calculate risk level based on confidence
+        if confidence >= 0.8:
+            risk_level = 'High' if diagnosis == "Parkinson's" else 'Low'
+        elif confidence >= 0.6:
+            risk_level = 'Moderate'
+        else:
+            risk_level = 'Uncertain'
+        
+        return jsonify({
+            'diagnosis': diagnosis,
+            'confidence': confidence,
+            'parkinsons_probability': parkinsons_probability,
+            'normal_probability': 1 - parkinsons_probability,
+            'risk_level': risk_level,
+            'feature_importance': feature_importance,
+            'features_analyzed': expected_features,
+            'model_used': csv_model_name
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/generate-report', methods=['POST'])
 def generate_report_endpoint():
     """Generate PDF report from prediction data"""
@@ -703,8 +809,9 @@ def chat_endpoint():
         full_prompt += f"User: {user_message}\nAssistant:"
 
         # Generate response using new SDK syntax
+        print(f"🤖 Generating chat response with model: models/gemini-2.5-flash")
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="models/gemini-2.5-flash",
             contents=full_prompt
         )
         
@@ -714,12 +821,17 @@ def chat_endpoint():
 
         return jsonify({
             'response': response_text,
-            'model': 'gemini-2.5-flash'
+            'model': 'models/gemini-2.5-flash'
         })
 
     except Exception as e:
         print(f"❌ Chat error: {e}")
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'error': str(e),
+            'details': 'Internal server error occurred in Gemini generator'
+        }), 500
 if __name__ == '__main__':
     print("Starting Flask server on http://127.0.0.1:5000")
     print("All routes are publicly accessible (authentication removed)")
