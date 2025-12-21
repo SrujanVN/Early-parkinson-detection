@@ -1,85 +1,73 @@
-# 🧠 Early Parkinson’s Detection
+# 🧠 Early Parkinson’s Detection & Analysis
 
-This project focuses on detecting **early signs of Parkinson’s Disease** using machine learning and deep learning techniques.  
-It provides an intuitive interface for uploading patient data (such as voice recordings, medical data, etc.) and returns predictions.
+This is a clinical-grade diagnostic support platform that utilizes **12 ensemble deep learning models** and **Explainable AI (XAI)** to detect early signs of Parkinson’s Disease. It analyzes MRI scans (with GradCAM/LIME), voice recordings, handwriting, and clinical data.
 
 ---
 
 ## ✨ Features
 
-- Detects early Parkinson’s disease with machine learning models.
-- Interactive **React + TailwindCSS** frontend.
-- **Flask backend** serving predictions.
-- Supports multiple input formats.
-- Scalable and deployable on cloud platforms.
-- Live demo for real-time testing.
+- **Multi-Modal Ensemble Analysis**: Combines predictions from 12 specialized models across MRI, Voice, Handwriting, and Clinical symptoms.
+- **Explainable AI (XAI)**: Generates GradCAM heatmaps and LIME explanations for MRI analysis to support clinical decision-making.
+- **Integrated AI Assistant**: A unified Gemini AI chatbot for patient education and diagnostic guidance.
+- **Persistent Analysis**: Base64-encoded session management ensures analysis results survive page refreshes.
+- **Project Dockerization**: Fully containerized environment for consistent deployment across any infrastructure.
+- **Medical Grade Reporting**: Generates detailed PDF reports with visualization overlays and risk assessments.
 
 ---
 
 ## 🛠 Tech Stack
 
-- **Frontend:** React, TypeScript, TailwindCSS  
-- **Backend:** Flask (Python)  
-- **Machine Learning:** Scikit-learn / TensorFlow / Keras  
-- **Deployment:** Render / Vercel / Netlify / HuggingFace Spaces (choose your platform)  
+- **Frontend:** React, TypeScript, TailwindCSS, Vite
+- **Backend:** Flask (Python 3.10)
+- **AI/ML Frameworks:** TensorFlow, PyTorch, Scikit-learn, XGBoost
+- **XAI:** OpenCV, GradCAM, LIME (Superpixel segmentation)
+- **LLM:** Google Gemini AI (Unified SDK)
+- **DevOps:** Docker, Docker Compose, Nginx, Git LFS
 
 ---
 
-## ⚙️ Installation & Setup
+## ⚙️ Quick Start (Docker - Recommended)
 
-### 🔹 Clone the repository
+The easiest way to run the entire stack (including 18GB of models and dependencies) is using Docker Compose.
 
+### 1. Clone the repository
 ```bash
 git clone https://github.com/SrujanVN/Early-parkinson-detection.git
 cd Early-parkinson-detection
 ```
 
-### 🔹 Backend Setup
-
+### 2. Configure Environment
+Create a `.env` file in the `backend/` directory:
 ```bash
-cd backend
-
-# Create a virtual environment
-python -m venv venv
-
-# Activate it
-# Windows
-venv\Scripts\activate
-# Mac/Linux
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run Flask server
-python app.py
+GEMINI_API_KEY=your_api_key_here
 ```
 
-The backend server will run at: [http://localhost:5000/](http://localhost:5000/)
-
-### 🔹 Frontend Setup
-
-Open a **new terminal**, then:
-
+### 3. Build and Run
 ```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+docker-compose up --build -d
 ```
-
-The frontend will run at: [http://localhost:5173/](http://localhost:5173/)
+- **Frontend**: [http://localhost:8080](http://localhost:8080)
+- **Backend API**: [http://localhost:5000](http://localhost:5000)
 
 ---
 
+## 🛠 Manual Installation (Development)
 
-## 🚀 Live Demo
+### Backend Setup
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # venv\Scripts\activate on Windows
+pip install -r requirements.txt
+python app.py
+```
 
-👉 _Click here to try the live demo_  
-<https://early-parkinsons-detection.netlify.app/>
+### Frontend Setup
+```bash
+# From the root directory
+npm install
+npm run dev
+```
 
 ---
 
@@ -88,40 +76,40 @@ The frontend will run at: [http://localhost:5173/](http://localhost:5173/)
 ```
 .
 ├── backend/
-│   ├── app.py
-│   ├── models/                  # Trained ML models
-│   │   ├── deep_learning_model.h5
-│   │   └── random_forest_model.pkl
-│   ├── uploads/                 # Uploaded files
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/           # Modular components
-│   │   │   ├── chatbot/          # Chatbot UI
-│   │   │   ├── hologram/         # Hologram viewer
-│   │   │   ├── home/             # Landing page sections
-│   │   │   ├── report/           # Report generation
-│   │   │   ├── ui/               # Reusable UI components
-│   │   │   └── upload/           # File upload & results
-│   │   ├── layout/               # Navbar, footer, app structure
-│   │   ├── pages/                # Route-level components
-│   │   ├── utils/                # Helper services & APIs
-│   │   ├── App.tsx
-│   │   ├── index.css
-│   │   └── main.tsx
-│   ├── package.json
-│   └── vite.config.js
+│   ├── models/                  # 12 Ensemble Models (.pth, .pkl)
+│   ├── uploads/                 # Storage for processing analysis
+│   ├── app.py                   # Main Flask API
+│   ├── ensemble_predictor.py    # Multi-model inference logic
+│   ├── xai_visualizations.py    # GradCAM & LIME implementation
+│   └── Dockerfile               # Backend container config
+├── src/
+│   ├── components/              # UI, Upload, & Result Visualizers
+│   ├── contexts/                # Persisted Session Management
+│   ├── pages/                   # Landing, Upload, & Chatbot pages
+│   └── utils/                   # Centralized API clients
+├── Dockerfile                   # Frontend container config (Nginx)
+├── docker-compose.yml           # Full stack orchestration
+├── nginx.conf                   # Reverse proxy configuration
 └── README.md
+```
 
+---
+
+## 📦 Large File Storage (Git LFS)
+
+This project uses **Git LFS** to manage large model files and datasets. Ensure you have Git LFS installed before cloning:
+```bash
+git lfs install
+git clone https://github.com/SrujanVN/Early-parkinson-detection.git
 ```
 
 ---
 
 ## 🙌 Acknowledgements
 
-We would like to express our sincere gratitude to our guide **Shashanka H P** for his valuable guidance and support throughout the development of this project.
+We extend our deepest gratitude to our main project coordinator, **Dr. Victor Ikechukwu Agughasi**(https://github.com/Victor-Ikechukwu), for his overall coordination and support, and to our guides **Shashanka H P** and **M J Yogesh** for their expert guidance throughout the development of this project..
 
-We also acknowledge the contributions of our team members:
+**Team Members:**
 - Rushika K Shankar
 - Ronith D Singh
 - Yashas M Samrat
@@ -132,5 +120,3 @@ We also acknowledge the contributions of our team members:
 ## 📜 License
 
 This project is licensed under the MIT License.
-
----
