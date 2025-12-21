@@ -1,32 +1,9 @@
-// API client for the NeuroAid application
-// Connects to the Flask backend API
-
-import { ModelPrediction } from './modelService';
-
-const API_BASE = 'http://127.0.0.1:5000';
-
 // Store the latest prediction result
 let latestPrediction: any = null;
 
 export type FileType = 'MRI' | 'Handwriting' | 'Audio' | 'CSV';
 
-// Helper function to make authenticated API requests
-const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    credentials: 'include', // Include cookies for session management
-    headers: {
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || `HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
-};
+const API_BASE = 'http://127.0.0.1:5000';
 
 // Function to upload file and get prediction (legacy endpoint)
 export const uploadFileForPrediction = async (
@@ -37,7 +14,12 @@ export const uploadFileForPrediction = async (
   formData.append('file', file);
   formData.append('fileType', fileType);
 
-  const response = await fetch(`${API_BASE}/predict`, {
+  // Determine endpoint based on file type
+  let endpoint = `${API_BASE}/predict`;
+  if (fileType === 'Handwriting') endpoint = `${API_BASE}/api/predict/handwriting`;
+  if (fileType === 'Audio') endpoint = `${API_BASE}/api/predict/voice`;
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'include',
     body: formData,
@@ -106,6 +88,24 @@ export const getLatestPrediction = () => {
   return latestPrediction;
 };
 
+// Function to predict from clinical features (CSV form)
+export const predictCSVFeatures = async (features: Record<string, number>): Promise<any> => {
+  const response = await fetch(`${API_BASE}/api/predict/csv-features`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(features),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'CSV prediction failed' }));
+    throw new Error(error.error || 'Prediction failed');
+  }
+
+  return response.json();
+};
+
 // Function to generate a report
 export const generateReport = async (predictionData?: any): Promise<Blob> => {
   const dataToSend = predictionData || latestPrediction;
@@ -153,7 +153,7 @@ export const sendChatMessage = async (message: string, history: any[] = []) => {
 };
 
 // Function to send a report by email
-export const sendReportByEmail = async (email: string): Promise<boolean> => {
+export const sendReportByEmail = async (): Promise<boolean> => {
   // TODO: Implement actual email sending endpoint
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1500));

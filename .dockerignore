@@ -1,0 +1,14 @@
+node_modules
+.venv
+venv
+.venv_models
+dist
+.env
+*.pyc
+__pycache__
+.git
+.gitignore
+README.md
+*.md
+.agent
+.gemini

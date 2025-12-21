@@ -26,11 +26,16 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const setUploadedImage = (image: UploadedImage) => {
     setUploadedImageState(image);
     // Also store in sessionStorage for persistence
-    if (image.originalUrl) {
-      sessionStorage.setItem('uploadedImageUrl', image.originalUrl);
-    }
-    if (image.gradcamUrl) {
-      sessionStorage.setItem('gradcamImageUrl', image.gradcamUrl);
+    try {
+      if (image.originalUrl) {
+        sessionStorage.setItem('uploadedImageUrl', image.originalUrl);
+      }
+      if (image.gradcamUrl) {
+        sessionStorage.setItem('gradcamUrl', image.gradcamUrl);
+      }
+    } catch (e) {
+      console.warn('Storage quota exceeded. Image preview will not persist on refresh.', e);
+      // We don't throw the error here to allow the app to function normally
     }
   };
 

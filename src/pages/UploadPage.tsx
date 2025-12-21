@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Brain } from 'lucide-react';
+import { Brain, Activity, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import FileUploader from '../components/upload/FileUploader';
-import ResultCard, { PredictionResult } from '../components/upload/ResultCard';
-import { uploadFileForPrediction, uploadXrayForEnsemblePrediction, storePrediction, FileType } from '../utils/api';
+import ResultCard, { PredictionResult } from '../components/upload/ResultCard'; // MRI Only
+import HandwritingResultCard from '../components/upload/HandwritingResultCard';
+import CSVResultCard from '../components/upload/CSVResultCard';
+import AudioResultCard from '../components/upload/AudioResultCard';
+import CSVResultVisuals from '../components/upload/CSVResultVisuals';
+import Button from '../components/ui/Button';
+import { uploadFileForPrediction, uploadXrayForEnsemblePrediction, storePrediction, predictCSVFeatures, FileType } from '../utils/api';
 import { useImage } from '../contexts/ImageContext';
 
 
@@ -43,12 +49,12 @@ const UploadPage: React.FC = () => {
       const previewUrl = URL.createObjectURL(file);
       let originalUrl: string | null = null;
 
-      // Convert image files to base64 for storage
-      if (file.type.startsWith('image/')) {
+      // Convert image and audio files to base64 for storage/persistence
+      if (file.type.startsWith('image/') || file.type.startsWith('audio/')) {
         try {
           originalUrl = await fileToBase64(file);
         } catch (e) {
-          console.error('Error converting image to base64:', e);
+          console.error('Error converting file to base64:', e);
           originalUrl = previewUrl; // Fallback to blob URL
         }
       } else {
@@ -105,6 +111,33 @@ const UploadPage: React.FC = () => {
     }
   };
 
+  const handleCSVFeatureSubmit = async (features: Record<string, number>) => {
+    setSelectedFileType('CSV');
+    setIsAnalyzing(true);
+    setError(null);
+
+    try {
+      const prediction = await predictCSVFeatures(features);
+      console.log('CSV Prediction results:', prediction);
+
+      const resultWithId = storePrediction(prediction);
+      setResult(resultWithId);
+
+      // Clear uploaded image for CSV as it's feature-based
+      setUploadedImage({
+        file: null,
+        previewUrl: null,
+        originalUrl: null,
+        gradcamUrl: null,
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to analyze features.';
+      setError(`Analysis Error: ${errorMessage}`);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -122,7 +155,7 @@ const UploadPage: React.FC = () => {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Upload & Analyze</h1>
           <p className="text-text/60 max-w-2xl mx-auto">
-            Upload your medical data for powered analysis to detect potential
+            Upload your medical data or enter clinical features for powered analysis to detect potential
             Parkinson's disease markers with high accuracy.
           </p>
         </div>
@@ -130,8 +163,12 @@ const UploadPage: React.FC = () => {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
-              <h2 className="text-xl font-semibold mb-4">File Upload</h2>
-              <FileUploader onFileUpload={handleFileUpload} />
+              <h2 className="text-xl font-semibold mb-4">Clinical Data Input</h2>
+              <FileUploader
+                onFileUpload={handleFileUpload}
+                onCSVFeatureSubmit={handleCSVFeatureSubmit}
+                isLoading={isAnalyzing}
+              />
               {error && (
                 <div className="mt-4 p-4 bg-error/10 text-error rounded-xl">
                   {error}
@@ -141,16 +178,57 @@ const UploadPage: React.FC = () => {
 
             <div>
               <h2 className="text-xl font-semibold mb-4">Analysis Results</h2>
-              <ResultCard
-                result={result}
-                fileType={selectedFileType}
-                isLoading={isAnalyzing}
-              />
+
+
+              {selectedFileType === 'Handwriting' ? (
+                <HandwritingResultCard
+                  result={result}
+                  isLoading={isAnalyzing}
+                />
+              ) : selectedFileType === 'CSV' ? (
+                <CSVResultCard
+                  result={result}
+                  isLoading={isAnalyzing}
+                />
+              ) : selectedFileType === 'Audio' ? (
+                <AudioResultCard
+                  result={result}
+                  isLoading={isAnalyzing}
+                />
+              ) : (
+                /* MRI (Default) */
+                <ResultCard
+                  result={result}
+                  fileType={selectedFileType}
+                  isLoading={isAnalyzing}
+                />
+              )}
+
+              {/* Inline Visuals & Details for CSV Analysis */}
+              {!isAnalyzing && result && selectedFileType === 'CSV' && (
+                <div className="mt-8 space-y-8 animate-in fade-in duration-700">
+                  <div>
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                      <Activity size={20} className="text-primary" />
+                      Visual Clinical Insights
+                    </h3>
+                    <CSVResultVisuals predictionData={result} />
+                  </div>
+
+                </div>
+              )}
+
+              {/* Inline Visuals & Details for Handwriting Analysis */}
+              {!isAnalyzing && result && selectedFileType === 'Handwriting' && (
+                <div className="mt-8 space-y-8 animate-in fade-in duration-700">
+                  {/* Dedicated card handles navigation now */}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.div >
   );
 };
 

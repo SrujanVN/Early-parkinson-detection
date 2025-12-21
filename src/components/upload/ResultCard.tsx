@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, CheckCircle, ArrowRight, Download, HelpCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, ArrowRight, Download, HelpCircle, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Card, { CardHeader, CardBody, CardFooter } from '../ui/Card';
 import Button from '../ui/Button';
@@ -40,15 +40,22 @@ export interface PredictionResult {
     available: boolean;
     image_base64?: string;
   };
+  // CSV specific fields
+  parkinsons_probability?: number;
+  normal_probability?: number;
+  risk_level?: string;
+  feature_importance?: Record<string, number>;
+  features_analyzed?: string[];
 }
 
 interface ResultCardProps {
   result: PredictionResult | null;
   fileType: string;
   isLoading?: boolean;
+  hideFooter?: boolean;
 }
 
-const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = false }) => {
+const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = false, hideFooter = false }) => {
   if (isLoading) {
     return (
       <Card>
@@ -89,6 +96,12 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
   const isUnknown = result.diagnosis === 'Unknown';
   const confidencePercent = (result.confidence * 100).toFixed(1);
 
+  // Extract risk level if available (sent by CSV backend)
+  const riskLevel = (result as any).risk_level || (isParkinsons ? 'High' : 'Low');
+  const riskColor = riskLevel === 'High' ? 'text-red-500 bg-red-50' :
+    riskLevel === 'Low' ? 'text-green-500 bg-green-50' :
+      'text-yellow-500 bg-yellow-50';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -97,20 +110,27 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
     >
       <Card>
         <CardHeader
-          title="Analysis Results"
-          subtitle={`Based on ${fileType} analysis`}
+          title="Diagnostic Summary"
+          subtitle={`Analysis based on ${fileType} data`}
         />
 
         <CardBody>
           <div className="flex flex-col items-center mb-6">
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${isParkinsons ? 'bg-warning/10' : isUnknown ? 'bg-card border border-divider' : 'bg-success/10'
+            <div className={`relative w-24 h-24 rounded-full flex items-center justify-center mb-4 shadow-sm ${isParkinsons ? 'bg-warning/10 border-2 border-warning/20' : isUnknown ? 'bg-card border border-divider' : 'bg-success/10 border-2 border-success/20'
               }`}>
               {isParkinsons ? (
-                <AlertTriangle size={36} className="text-warning" />
+                <AlertTriangle size={40} className="text-warning" />
               ) : isUnknown ? (
-                <HelpCircle size={36} className="text-text/40" />
+                <HelpCircle size={40} className="text-text/40" />
               ) : (
-                <CheckCircle size={36} className="text-success" />
+                <CheckCircle size={40} className="text-success" />
+              )}
+
+              {/* Risk Level Badge */}
+              {!isUnknown && (
+                <div className={`absolute -bottom-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${riskColor}`}>
+                  {riskLevel} Risk
+                </div>
               )}
             </div>
 
@@ -119,16 +139,16 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
               {result.diagnosis}
             </h3>
 
-            <div className="w-full max-w-xs bg-divider/20 rounded-full h-2.5 mb-2 mt-4">
+            <div className="w-full max-w-xs bg-divider/20 rounded-full h-2 mb-2 mt-6 overflow-hidden">
               <div
-                className={`h-2.5 rounded-full ${isParkinsons ? 'bg-warning' : isUnknown ? 'bg-gray-400' : 'bg-success'
+                className={`h-full rounded-full transition-all duration-1000 ${isParkinsons ? 'bg-warning' : isUnknown ? 'bg-gray-400' : 'bg-success'
                   }`}
                 style={{ width: `${confidencePercent}%` }}
               ></div>
             </div>
 
             <p className="text-sm text-text/60">
-              Confidence: <span className="font-medium">{confidencePercent}%</span>
+              Confidence Score: <span className="font-bold text-text"> {confidencePercent}%</span>
             </p>
           </div>
 
@@ -253,13 +273,23 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
           )}
         </CardBody>
 
-        <CardFooter className="flex flex-col sm:flex-row gap-3">
-          <Link to="/report" className="w-full sm:w-auto">
-            <Button fullWidth icon={<Download size={16} />}>
-              Generate Report
-            </Button>
-          </Link>
-        </CardFooter>
+        {!hideFooter && (
+          <CardFooter className="flex flex-col sm:flex-row gap-3">
+            {fileType === 'CSV' ? (
+              <Link to="/csv-report" state={{ predictionData: result }} className="w-full sm:w-auto">
+                <Button fullWidth icon={<Activity size={16} />}>
+                  View Clinical Report
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/report" className="w-full sm:w-auto">
+                <Button fullWidth icon={<Download size={16} />}>
+                  Generate Report
+                </Button>
+              </Link>
+            )}
+          </CardFooter>
+        )}
       </Card>
     </motion.div>
   );
