@@ -1,4 +1,4 @@
-# 🧠 Early Parkinson’s Detection & Analysis
+# 🧠 Early Parkinson’s Detection & Analysis via xAI
 
 This is a clinical-grade diagnostic support platform that utilizes **12 ensemble deep learning models** and **Explainable AI (XAI)** to detect early signs of Parkinson’s Disease. It analyzes MRI scans (with GradCAM/LIME), voice recordings, handwriting, and clinical data.
 
