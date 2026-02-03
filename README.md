@@ -4,6 +4,16 @@ NeuroAid is a clinical-grade diagnostic support platform that utilizes **12 ense
 
 ---
 
+## 🎥 Live Demo
+
+Check out the live demonstration of NeuroAid in action:
+
+[![NeuroAid Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE)
+
+> **Note:** Since the project is not yet deployed, watch the video above to see the features in real-time.
+
+---
+
 ## ✨ Features
 
 - **Multi-Modal Ensemble Analysis**: Combines predictions from 12 specialized models across MRI, Voice, Handwriting, and Clinical symptoms.
