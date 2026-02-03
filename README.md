@@ -107,7 +107,7 @@ git clone https://github.com/SrujanVN/Early-parkinson-detection.git
 
 ## 🙌 Acknowledgements
 
-We would like to express our sincere gratitude to our guide **Shashanka H P** for his valuable guidance throughout the development of this project.
+We extend our deepest gratitude to our main project coordinator, [**Dr. Victor Ikechukwu Agughasi**](https://github.com/Victor-Ikechukwu), for his overall coordination and support, and to our guides **Shashanka H P** and **M J Yogesh** for their expert guidance throughout the development of this project.
 
 **Team Members:**
 - Rushika K Shankar
