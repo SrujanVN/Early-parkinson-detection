@@ -1,0 +1,35 @@
+Loaded voice model: Ensemble
+Traceback (most recent call last):
+Loaded voice model: Random Forest
+Loaded voice model: SVM
+Loaded voice model: XGBoost
+Warning: TensorFlow not available: No module named 'tensorflow.python'
+Server will start but predictions will not work until TensorFlow is installed.
+Gemini AI initialized (using new unified SDK)
+
+==================================================
+Initializing Ensemble Models...
+==================================================
+[OK] Loaded MRI_DenseNet121 (PyTorch) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_mri/best_densenet121.pth
+[OK] Loaded MRI_ResNet50 (PyTorch) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_mri/best_resnet50.pth
+[OK] Loaded MRI_EfficientNetB0 (PyTorch) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_mri/best_efficientnet_b0.pth
+[OK] Loaded MRI_EfficientNetB3 (PyTorch) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_mri/best_efficientnet_b3.pth
+  File "C:\Users\sruja\Early-parkinson-detection\backend\app.py", line 97, in <module>
+[OK] Loaded Handwriting_HOG_SVM (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_handwriting/hog_svm_open_set.pkl
+[OK] Loaded Handwriting_LBP_RF (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_handwriting/lbp_rf_open_set.pkl
+[OK] Loaded Handwriting_MobileNet_SVM (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_handwriting/mobilenet_svm_open_set.pkl
+[ERROR] Error loading Handwriting_Ensemble: Can't get attribute 'ParkinsonEnsemble' on <module '__main__' from 'C:\\Users\\sruja\\Early-parkinson-detection\\backend\\app.py'>
+[OK] Loaded Voice_XGBoost (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsons_voice/xgboost_parkinson_voice.pkl
+[OK] Loaded Voice_RandomForest (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsons_voice/random_forest_parkinson_voice.pkl
+[OK] Loaded Voice_SVM (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsons_voice/svm_parkinson_voice.pkl
+[OK] Loaded Voice_Ensemble (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsons_voice/ensemble_parkinson_voice.pkl
+[OK] Loaded CSV_XGBoost (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsions_csv/parkinson_xgboost.pkl
+
+[ENSEMBLE] 12/13 models loaded
+[OK] Ensemble predictor ready
+  Models loaded: {'loaded_models': ['MRI_DenseNet121', 'MRI_ResNet50', 'MRI_EfficientNetB0', 'MRI_EfficientNetB3', 'Handwriting_HOG_SVM', 'Handwriting_LBP_RF', 'Handwriting_MobileNet_SVM', 'Voice_XGBoost', 'Voice_RandomForest', 'Voice_SVM', 'Voice_Ensemble', 'CSV_XGBoost'], 'model_types': {'MRI_DenseNet121': 'pytorch', 'MRI_ResNet50': 'pytorch', 'MRI_EfficientNetB0': 'pytorch', 'MRI_EfficientNetB3': 'pytorch', 'Handwriting_HOG_SVM': 'sklearn', 'Handwriting_LBP_RF': 'sklearn', 'Handwriting_MobileNet_SVM': 'sklearn', 'Voice_XGBoost': 'sklearn', 'Voice_RandomForest': 'sklearn', 'Voice_SVM': 'sklearn', 'Voice_Ensemble': 'sklearn', 'CSV_XGBoost': 'sklearn'}, 'total_models': 12, 'is_ready': True}
+==================================================
+
+    register_handwriting_routes(app)
+                                ^^^
+NameError: name 'app' is not defined

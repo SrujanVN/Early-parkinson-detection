@@ -3,7 +3,10 @@ let latestPrediction: any = null;
 
 export type FileType = 'MRI' | 'Handwriting' | 'Audio' | 'CSV';
 
-const API_BASE = 'http://127.0.0.1:5000';
+// Use relative URLs - works with nginx proxy in Docker, and Vite proxy in dev
+const API_BASE = window.location.hostname === 'localhost' && window.location.port === '5173'
+  ? ''  // Development mode (Vite proxy will forward to backend)
+  : '';  // Production mode (use relative URLs with nginx proxy)
 
 // Function to upload file and get prediction (legacy endpoint)
 export const uploadFileForPrediction = async (

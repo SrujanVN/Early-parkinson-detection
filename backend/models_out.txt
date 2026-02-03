@@ -1,3 +1,0 @@
-Listing models...
-Model name: models/embedding-gecko-001
-Error: 'Model' object has no attribute 'supported_generation_methods'

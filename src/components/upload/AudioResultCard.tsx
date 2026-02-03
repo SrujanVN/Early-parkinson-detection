@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Mic, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
+import { CheckCircle, AlertTriangle, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Card, { CardHeader, CardBody, CardFooter } from '../ui/Card';
 import Button from '../ui/Button';
@@ -75,7 +75,27 @@ const AudioResultCard: React.FC<AudioResultCardProps> = ({ result, isLoading = f
                             Confidence Score: <span className="font-bold text-text"> {confidencePercent}%</span>
                         </p>
 
-                        {/* Show spectrogram if available, but in a simplified way independent of MRI logic */}
+                        {/* 4-Model Breakdown Mini Table */}
+                        {result.model_metrics && (
+                            <div className="mt-6 w-full bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                <p className="text-[10px] uppercase font-bold opacity-50 mb-2 tracking-wider">4-Model Ensemble Breakdown</p>
+                                <div className="space-y-2">
+                                    {result.model_metrics.slice(0, 4).map((model: any, idx: number) => (
+                                        <div key={idx} className="flex justify-between items-center text-xs">
+                                            <span className="font-medium text-text/70">{model.name}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`font-bold ${model.diagnosis === "Parkinson's" ? 'text-red-500' : 'text-green-500'}`}>
+                                                    {model.diagnosis === "Parkinson's" ? 'PD' : 'Normal'}
+                                                </span>
+                                                <span className="opacity-40 text-[10px]">{(model.probability * 100).toFixed(0)}%</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Show spectrogram if available */}
                         {result.spectrogramUrl && (
                             <div className="mt-4 w-full">
                                 <p className="text-xs text-center text-text/60 mb-1">Spectrogram Analysis</p>

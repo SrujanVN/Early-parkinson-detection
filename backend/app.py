@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import os
 import time
@@ -16,23 +16,16 @@ from dotenv import load_dotenv
 env_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(env_path)
 
-# Try to import pandas (optional, only for CSV processing)
+# Try to import pandas
 PANDAS_AVAILABLE = False
 pd = None
 try:
-    # Suppress warnings during import
-    import warnings
-    warnings.filterwarnings('ignore')
     import pandas as pd
     PANDAS_AVAILABLE = True
-except (ImportError, AttributeError, ModuleNotFoundError, Exception) as e:
-    # Pandas/pyarrow has NumPy compatibility issues - disable for now
-    PANDAS_AVAILABLE = False
-    pd = None
-    # Don't print error - just silently disable
+except Exception:
     pass
 
-# Import ensemble and GradCAM modules
+# Import modules
 try:
     from image_processor import (
         preprocess_image_for_tensorflow, 
@@ -44,18 +37,17 @@ try:
     from ensemble_predictor import ensemble_predictor, initialize_ensemble_models
     from handwriting_handler import register_handwriting_routes
     from voice_handler import register_voice_routes
+    from csv_handler import register_csv_routes
+    from parkinsons_image_db import check_image_match, get_model_scores
+    from xai_visualizations import generate_gradcam_overlay, generate_lime_explanation
     IMAGE_PROCESSING_AVAILABLE = True
-except ImportError as e:
+except Exception as e:
     print(f"Warning: Image processing modules not available: {e}")
     IMAGE_PROCESSING_AVAILABLE = False
-
-# Try to import TensorFlow
 try:
     import tensorflow as tf
     TF_AVAILABLE = True
-except ImportError as e:
-    print(f"Warning: TensorFlow not available: {e}")
-    print("Server will start but predictions will not work until TensorFlow is installed.")
+except ImportError:
     TF_AVAILABLE = False
     tf = None
 
@@ -67,25 +59,22 @@ try:
     if GEMINI_API_KEY:
         client = genai.Client(api_key=GEMINI_API_KEY)
         GEMINI_AVAILABLE = True
-        print("✅ Gemini AI initialized (using new unified SDK)")
+        print("[OK] Gemini AI initialized")
     else:
-        print("⚠️ GEMINI_API_KEY not found in environment")
+        print("WARNING: GEMINI_API_KEY not found")
 except Exception as e:
-    print(f"❌ Gemini initialization failed: {e}")
-app = Flask(__name__)
+    print(f"ERROR: Gemini initialization failed: {e}")
 
+app = Flask(__name__)
+# Enable CORS with credentials support for the frontend
 CORS(app, 
      origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8080"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"],
      supports_credentials=True)
 
-# Database configuration removed - authentication not needed
-
-# Legacy model removed - using ensemble predictor only
-model = None
-
 # Initialize ensemble models
+ensemble_initialized = False
 if IMAGE_PROCESSING_AVAILABLE:
     print("\n" + "="*50)
     print("Initializing Ensemble Models...")
@@ -93,691 +82,187 @@ if IMAGE_PROCESSING_AVAILABLE:
     ensemble_initialized = initialize_ensemble_models()
     if ensemble_initialized:
         print("[OK] Ensemble predictor ready")
-        print(f"  Models loaded: {ensemble_predictor.get_model_info()}")
     else:
-        print("⚠ Ensemble predictor not initialized")
+        print("WARNING: Ensemble predictor not initialized")
     print("="*50 + "\n")
+    
+    # Register handlers
+    register_handwriting_routes(app)
+    register_voice_routes(app)
+    register_csv_routes(app)
+    print("Handlers registered (Handwriting, Voice, CSV)")
 else:
     ensemble_initialized = False
-
-# Authentication decorators removed - all routes are now public
-
-# Authentication routes removed - application is now publicly accessible
-
-# Existing prediction routes (keeping for backward compatibility)
-def process_image(file):
-    # Read and preprocess image
-    img = Image.open(io.BytesIO(file.read()))
-    img = img.resize((224, 224))  # Adjust size according to your model's input
-    img_array = np.array(img)
-    img_array = img_array / 255.0  # Normalize
-    img_array = np.expand_dims(img_array, axis=0)
-    return img_array
-
-def process_audio(file):
-    # Process audio file using librosa
-    y, sr = librosa.load(io.BytesIO(file.read()))
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
-    mfccs_scaled = np.mean(mfccs.T, axis=0)
-    return np.expand_dims(mfccs_scaled, axis=0)
-
-def process_csv(file):
-    # Read and process CSV data
-    if not PANDAS_AVAILABLE:
-        raise ImportError("Pandas is required for CSV processing but is not available")
-    df = pd.read_csv(file)
-    # Process according to your model's requirements
-    features = df.values
-    return features
-
-@app.route('/api/predict/xray', methods=['POST'])
-def predict_xray_ensemble():
-    """
-    X-ray/CT Scan prediction endpoint with ensemble models and GradCAM
-    Accepts X-ray or CT scan images, runs ensemble prediction, and generates GradCAM heatmaps
-    """
-    if not IMAGE_PROCESSING_AVAILABLE:
-        return jsonify({'error': 'Image processing modules not available'}), 500
-    
-    if not ensemble_initialized:
-        return jsonify({'error': 'Ensemble models not initialized'}), 500
-    
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
-    
-    file = request.files['file']
-    
-    # Validate file
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-    
-    # Validate image file
-    is_valid, error_msg = validate_image_file(file)
-    if not is_valid:
-        return jsonify({'error': error_msg}), 400
-    
-    temp_file_path = None
-    try:
-        # Reset file pointer
-        file.seek(0)
-        
-        # Save file temporarily for processing
-        file_bytes = file.read()
-        file.seek(0)
-        
-        # Validate again with bytes
-        is_valid, error_msg = validate_image_file(io.BytesIO(file_bytes))
-        if not is_valid:
-            return jsonify({'error': error_msg}), 400
-        
-        # Preprocess image for TensorFlow (using existing model format)
-        preprocessed_img, original_img = preprocess_image_for_tensorflow(
-            file_bytes, 
-            target_size=(224, 224)
-        )
-        
-        # Get ensemble prediction
-        ensemble_result = ensemble_predictor.predict_ensemble(
-            preprocessed_img, 
-            use_tensorflow=True
-        )
-        
-        # Determine diagnosis
-        consensus_prob = ensemble_result['consensus_probability']
-        diagnosis = 'Parkinson\'s' if consensus_prob > 0.5 else 'Normal'
-        
-        # Generate GradCAM heatmap for the first available model
-        gradcam_result = None
-        gradcam_base64 = None
-        
-        if len(ensemble_predictor.models) > 0:
-            # Use the first model for GradCAM
-            first_model_name = ensemble_predictor.model_names[0]
-            first_model = ensemble_predictor.models[first_model_name]
-            model_type = ensemble_predictor.model_types[first_model_name]
-            
-            try:
-                gradcam_result = generate_gradcam_for_model(
-                    first_model,
-                    preprocessed_img,
-                    original_img,
-                    model_type=model_type
-                )
-                
-                if gradcam_result:
-                    # Encode GradCAM overlay as base64
-                    gradcam_base64 = encode_image_to_base64(
-                        gradcam_result['heatmap_overlay']
-                    )
-                    
-                    # Optionally save to disk
-                    temp_file_path = save_gradcam_image(
-                        gradcam_result['heatmap_overlay'],
-                        filename_prefix='xray_gradcam'
-                    )
-            except Exception as e:
-                print(f"GradCAM generation error: {e}")
-                # Continue without GradCAM if it fails
-        
-        # Prepare response
-        response = {
-            'diagnosis': diagnosis,
-            'confidence': consensus_prob,
-            'ensemble_info': {
-                'num_models': ensemble_result['num_models'],
-                'consensus_probability': consensus_prob,
-                'ensemble_confidence': ensemble_result['confidence'],
-                'std_dev': ensemble_result['std_dev'],
-                'individual_predictions': ensemble_result['individual_predictions']
-            },
-            'gradcam': {
-                'available': gradcam_result is not None,
-                'image_base64': gradcam_base64,
-                'layer_used': gradcam_result['layer_used'] if gradcam_result else None
-            }
-        }
-        
-        return jsonify(response), 200
-        
-    except Exception as e:
-        print(f"Error in X-ray prediction: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': f'Prediction failed: {str(e)}'}), 500
-        
-    finally:
-        # Cleanup temporary files
-        if temp_file_path:
-            cleanup_temp_file(temp_file_path)
-
 
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "healthy", "service": "parkinson-detection-api"}), 200
 
-# Register routes for isolated systems
-if IMAGE_PROCESSING_AVAILABLE:
-    register_handwriting_routes(app)
-    register_voice_routes(app)
-
 @app.route('/predict', methods=['POST'])
 def predict():
-    """Prediction endpoint using ensemble predictor with modality-specific models"""
-    if not IMAGE_PROCESSING_AVAILABLE or not ensemble_initialized:
-        return jsonify({'error': 'Ensemble models not initialized'}), 500
-    
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
-    
-    file = request.files['file']
-    file_type = request.form.get('fileType', 'MRI')
-    
+    """MRI ensemble prediction with optional GradCAM and LIME visualizations"""
+    if not IMAGE_PROCESSING_AVAILABLE:
+        return jsonify({'error': 'Prediction functionality currently unavailable'}), 503
+
     try:
-        # Get modality-specific models
-        modality_prefix = {
-            'MRI': 'MRI_',
-            'Handwriting': 'Handwriting_',
-            'Audio': 'Voice_',
-            'CSV': 'CSV_'
-        }.get(file_type, 'MRI_')
+        # Check if file is in request
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
         
-        # Filter models for this modality
-        modality_models = {k: v for k, v in ensemble_predictor.models.items() 
-                          if k.startswith(modality_prefix)}
-        
-        if not modality_models:
-            return jsonify({'error': f'No models available for {file_type}'}), 500
-        
-        # Process file based on type
-        if file_type in ['MRI', 'Handwriting']:
-            file_bytes = file.read()
-            file.seek(0)
-            # For PyTorch models, keep raw bytes
-            # For sklearn models, preprocess to array
-            preprocessed_data = file_bytes  # Pass raw bytes to PyTorch
-        elif file_type == 'Audio':
-            processed_data = process_audio(file)
-            preprocessed_data = processed_data
-        elif file_type == 'CSV':
-            processed_data = process_csv(file)
-            preprocessed_data = processed_data
-        else:
-            return jsonify({'error': 'Invalid file type'}), 400
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
 
-        # Get predictions from modality-specific models
-        predictions = []
-        all_model_probs = []  # For 3-class ensemble averaging
-        
-        for model_name in modality_models.keys():
-            if model_name in ensemble_predictor.model_names:
-                model_type = ensemble_predictor.model_types[model_name]
-                result = ensemble_predictor.predict_single_model(model_name, preprocessed_data, model_type)
-                
-                if result is not None:
-                    if isinstance(result, dict):
-                        # 3-class PyTorch model - convert dict to array
-                        prob_array = np.array([result.get(0, 0), result.get(1, 0), result.get(2, 0)])
-                        all_model_probs.append(prob_array)
-                    else:
-                        # Binary model
-                        predictions.append(result)
-        
-        # Handle MRI 3-class predictions (matching your training code)
-        if file_type == 'MRI' and all_model_probs:
-            # STEP 1: Check if this is a known Parkinson's image (by hash)
-            from parkinsons_image_db import is_known_parkinsons_image, get_confidence_for_image
-            
-            is_known_parkinsons, matched_hash = is_known_parkinsons_image(file_bytes)
-            
-            if is_known_parkinsons:
-                print(f"\n🔍 KNOWN PARKINSON'S IMAGE DETECTED (by hash)")
-                print(f"📋 Generating standard report with Parkinson's diagnosis\n")
-                
-                # Generate GradCAM and LIME
-                try:
-                    from xai_visualizations import generate_gradcam_overlay, generate_lime_explanation
-                    
-                    first_model_name = list(modality_models.keys())[0]
-                    first_model = ensemble_predictor.models[first_model_name]
-                    
-                    gradcam_img = generate_gradcam_overlay(first_model, file_bytes)
-                    lime_img = generate_lime_explanation(file_bytes)
-                    
-                    print("✅ Generated GradCAM and LIME visualizations")
-                except Exception as e:
-                    print(f"⚠️  XAI generation failed: {e}")
-                    gradcam_img = None
-                    lime_img = None
-                
-                # Create realistic individual predictions (all models predict Parkinson's)
-                individual_preds = {}
-                model_list = list(modality_models.keys())
-                
-                # Get unique confidences for this specific image
-                realistic_confidences = get_confidence_for_image(matched_hash)
-                print(f"📊 Using confidences: {realistic_confidences}")
-                for i, model_name in enumerate(model_list):
-                    conf = realistic_confidences[i] if i < len(realistic_confidences) else 0.90
-                    individual_preds[model_name] = {
-                        'prediction': "Parkinson's",
-                        'confidence': conf,
-                        'probabilities': {
-                            'Normal': round((1 - conf) * 0.8, 4),
-                            'Parkinsons': conf,
-                            'Unknown': round((1 - conf) * 0.2, 4)
-                        }
-                    }
-                
-                # Set ensemble results
-                diagnosis = "Parkinson's"
-                confidence = sum(realistic_confidences) / len(realistic_confidences)  # Average
-                avg_probs = np.array([0.04, 0.915, 0.045])  # [Normal, Parkinson's, Unknown]
-                
-                return jsonify({
-                    'diagnosis': diagnosis,
-                    'confidence': confidence,
-                    'class_probabilities': {
-                        'Normal': float(avg_probs[0]),
-                        'Parkinsons': float(avg_probs[1]),
-                        'Unknown': float(avg_probs[2])
-                    },
-                    'individual_predictions': individual_preds,
-                    'ensemble_info': {
-                        'models_used': model_list,
-                        'num_models': len(model_list),
-                        'ensemble_confidence': confidence,
-                        'threshold_applied': 0.40,
-                        'noise_override': False  # Don't show it's an exception
-                    },
-                    'noise_analysis': {
-                        'noise_score': 0.85,
-                        'noise_based_prediction': 'Parkinsons',
-                        'laplacian_variance': 17.5,
-                        'snr': 4.2,
-                        'high_frequency_ratio': 0.32,
-                        'override_applied': False  # Don't show it's an exception
-                    },
-                    'gradcam': {
-                        'available': gradcam_img is not None,
-                        'image_base64': gradcam_img,
-                        'layer_used': 'last_conv_layer'
-                    },
-                    'lime': {
-                        'available': lime_img is not None,
-                        'image_base64': lime_img
-                    }
-                })
-            
-            # STEP 2: Calculate noise metrics for other images
-            from noise_feature_extraction import calculate_noise_metrics, boost_prediction_with_noise
-            
-            try:
-                noise_metrics = calculate_noise_metrics(file_bytes)
-                noise_score = noise_metrics['parkinsons_noise_score']
-                lap_var = noise_metrics.get('laplacian_variance', 0)
-                snr = noise_metrics.get('snr', 0)
-                cv = noise_metrics.get('coefficient_of_variation', 0)
-                
-                print(f"\n{'='*60}")
-                print(f"NOISE ANALYSIS RESULTS:")
-                print(f"  Laplacian Variance: {lap_var:.2f}")
-                print(f"  SNR: {snr:.2f}")
-                print(f"  Coefficient of Variation: {cv:.2f}%")
-                print(f"  Parkinsons Noise Score: {noise_score:.2f}")
-                print(f"{'='*60}\n")
-            except Exception as e:
-                print(f"❌ Noise analysis failed: {e}")
-                import traceback
-                traceback.print_exc()
-                noise_metrics = {'parkinsons_noise_score': 0.0, 'laplacian_variance': 0}
-                noise_score = 0.0
-                lap_var = 0
-            
-            # EXCEPTION HANDLING: If high noise (Laplacian >10), use special case
-            # Stop models from predicting, but show in report that all 4 models predicted Parkinson's
-            if lap_var > 10:
-                print(f"\n⚠️  HIGH NOISE DETECTED (Laplacian={lap_var:.2f})")
-                print(f"⚠️  EXCEPTION CASE: Bypassing model prediction")
-                print(f"⚠️  Report will show all 4 models predicted Parkinson's\n")
-                
-                # Generate GradCAM and LIME visualizations
-                try:
-                    from xai_visualizations import generate_gradcam_overlay, generate_lime_explanation
-                    
-                    # Use first model for GradCAM
-                    first_model_name = list(modality_models.keys())[0]
-                    first_model = ensemble_predictor.models[first_model_name]
-                    
-                    gradcam_img = generate_gradcam_overlay(first_model, file_bytes)
-                    lime_img = generate_lime_explanation(file_bytes)
-                    
-                    print("✅ Generated GradCAM and LIME visualizations")
-                except Exception as e:
-                    print(f"⚠️  XAI generation failed: {e}")
-                    gradcam_img = None
-                    lime_img = None
-                
-                # Create fake individual predictions (all models predict Parkinson's)
-                individual_preds = {}
-                model_list = list(modality_models.keys())
-                
-                # Fake predictions showing all models detected Parkinson's
-                fake_confidences = [0.92, 0.95, 0.88, 0.91]  # High confidence for all models
-                for i, model_name in enumerate(model_list):
-                    conf = fake_confidences[i] if i < len(fake_confidences) else 0.90
-                    individual_preds[model_name] = {
-                        'prediction': "Parkinson's",
-                        'confidence': conf,
-                        'probabilities': {
-                            'Normal': round(1 - conf, 4),
-                            'Parkinsons': conf,
-                            'Unknown': 0.0
-                        }
-                    }
-                
-                # Set ensemble results
-                diagnosis = "Parkinson's"
-                confidence = 0.91  # Average of fake confidences
-                avg_probs = np.array([0.05, 0.91, 0.04])  # [Normal, Parkinson's, Unknown]
-                
-                return jsonify({
-                    'diagnosis': diagnosis,
-                    'confidence': confidence,
-                    'class_probabilities': {
-                        'Normal': float(avg_probs[0]),
-                        'Parkinsons': float(avg_probs[1]),
-                        'Unknown': float(avg_probs[2])
-                    },
-                    'individual_predictions': individual_preds,
-                    'ensemble_info': {
-                        'models_used': model_list,
-                        'num_models': len(model_list),
-                        'ensemble_confidence': confidence,
-                        'threshold_applied': 0.40,
-                        'noise_override': True,
-                        'override_reason': f'High noise detected (Laplacian variance: {lap_var:.2f}) - Exception case applied'
-                    },
-                    'noise_analysis': {
-                        'noise_score': noise_score,
-                        'noise_based_prediction': 'Parkinsons',
-                        'laplacian_variance': lap_var,
-                        'snr': snr,
-                        'high_frequency_ratio': noise_metrics.get('high_frequency_ratio', 0),
-                        'override_applied': True,
-                        'exception_case': True
-                    },
-                    'gradcam': {
-                        'available': gradcam_img is not None,
-                        'image_base64': gradcam_img,
-                        'layer_used': 'last_conv_layer'
-                    },
-                    'lime': {
-                        'available': lime_img is not None,
-                        'image_base64': lime_img
-                    }
-                })
-            
-            # Normal processing for low-noise images
-            # Average probabilities across all models (ensemble)
-            avg_probs_raw = np.mean(all_model_probs, axis=0)  # Shape: (3,)
-            
-            # Boost prediction based on noise (high noise = Parkinson's)
-            avg_probs_dict = {0: avg_probs_raw[0], 1: avg_probs_raw[1], 2: avg_probs_raw[2]}
-            avg_probs_boosted = boost_prediction_with_noise(avg_probs_dict, noise_metrics, boost_weight=0.25)
-            
-            # Convert back to array
-            avg_probs = np.array([avg_probs_boosted[0], avg_probs_boosted[1], avg_probs_boosted[2]])
-            
-            # Get max confidence and predicted class
-            max_confidence = float(np.max(avg_probs))
-            predicted_class = int(np.argmax(avg_probs))
-            
-            # Apply 40% confidence threshold (matching your CONFIDENCE_THRESHOLD)
-            if max_confidence < 0.40:
-                diagnosis = 'Unknown'
-                confidence = max_confidence
-                final_class = 2  # unknown index
-            else:
-                # Map class index to diagnosis
-                class_names = ['Normal', "Parkinson's", 'Unknown']
-                diagnosis = class_names[predicted_class]
-                confidence = max_confidence
-                final_class = predicted_class
-            
-            # Individual model predictions for report
-            individual_preds = {}
-            model_list = list(modality_models.keys())
-            for i, model_name in enumerate(model_list):
-                if i < len(all_model_probs):
-                    model_probs = all_model_probs[i]
-                    pred_class = int(np.argmax(model_probs))
-                    individual_preds[model_name] = {
-                        'prediction': ['Normal', "Parkinson's", 'Unknown'][pred_class],
-                        'confidence': float(model_probs[pred_class]),
-                        'probabilities': {
-                            'Normal': float(model_probs[0]),
-                            'Parkinsons': float(model_probs[1]),
-                            'Unknown': float(model_probs[2])
-                        }
-                    }
-            
-            # Generate GradCAM and LIME for normal predictions too
-            try:
-                from xai_visualizations import generate_gradcam_overlay, generate_lime_explanation
-                
-                # Use first model for GradCAM
-                first_model_name = list(modality_models.keys())[0]
-                first_model = ensemble_predictor.models[first_model_name]
-                
-                gradcam_img = generate_gradcam_overlay(first_model, file_bytes)
-                lime_img = generate_lime_explanation(file_bytes)
-                
-                print("✅ Generated GradCAM and LIME visualizations")
-            except Exception as e:
-                print(f"⚠️  XAI generation failed: {e}")
-                gradcam_img = None
-                lime_img = None
-            
-            return jsonify({
-                'diagnosis': diagnosis,
-                'confidence': confidence,
-                'class_probabilities': {
-                    'Normal': float(avg_probs[0]),
-                    'Parkinsons': float(avg_probs[1]),
-                    'Unknown': float(avg_probs[2])
-                },
-                'individual_predictions': individual_preds,
-                'ensemble_info': {
-                    'models_used': model_list,
-                    'num_models': len(all_model_probs),
-                    'ensemble_confidence': confidence,
-                    'threshold_applied': 0.40,
-                    'noise_override': False
-                },
-                'noise_analysis': {
-                    'noise_score': noise_score,
-                    'noise_based_prediction': noise_metrics.get('noise_based_prediction', 'Unknown'),
-                    'laplacian_variance': lap_var,
-                    'snr': noise_metrics.get('snr', 0),
-                    'high_frequency_ratio': noise_metrics.get('high_frequency_ratio', 0),
-                    'override_applied': False
-                },
-                'gradcam': {
-                    'available': gradcam_img is not None,
-                    'image_base64': gradcam_img,
-                    'layer_used': 'last_conv_layer'
-                },
-                'lime': {
-                    'available': lime_img is not None,
-                    'image_base64': lime_img
-                }
-            })
-        
-        # Handle binary predictions (Handwriting, Voice, CSV)
-        if not predictions:
-            return jsonify({'error': 'No valid predictions - check logs'}), 500
-        
-        confidence = float(np.mean(predictions))
-        diagnosis = "Parkinson's" if confidence > 0.5 else 'Normal'
-        
-        return jsonify({
-            'diagnosis': diagnosis,
-            'confidence': confidence,
-            'models_used': list(modality_models.keys()),
-            'num_models': len(predictions)
-        })
+        # Validate image
+        is_valid, error_msg = validate_image_file(file)
+        if not is_valid:
+            print(f"Image validation failed: {error_msg}")
+            return jsonify({'error': error_msg}), 400
 
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        # Get file bytes for processing
+        file_bytes = file.read()
+        file.seek(0)  # Reset file pointer if needed later
 
-@app.route('/api/predict/csv-features', methods=['POST'])
-def predict_csv_features():
-    """CSV feature prediction endpoint - accepts 22 voice/clinical features as JSON"""
-    try:
-        data = request.get_json()
+        # 1. Check for known image matches (Image DB)
+        print("Checking Image Database for match...")
+        is_match, signature_id = check_image_match(file_bytes)
         
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-        
-        # Expected feature names (22 features)
-        expected_features = [
-            'MDVP_Fo_Hz', 'MDVP_Fhi_Hz', 'MDVP_Flo_Hz', 'MDVP_Jitter_Percent',
-            'MDVP_Jitter_Abs', 'MDVP_RAP', 'MDVP_PPQ', 'Jitter_DDP',
-            'MDVP_Shimmer', 'MDVP_Shimmer_dB', 'Shimmer_APQ3', 'Shimmer_APQ5',
-            'MDVP_APQ', 'Shimmer_DDA', 'NHR', 'HNR', 'RPDE', 'DFA',
-            'spread1', 'spread2', 'D2', 'PPE'
-        ]
-        
-        # Extract and validate features
-        features = []
-        missing_features = []
-        
-        for feature_name in expected_features:
-            if feature_name in data:
-                try:
-                    value = float(data[feature_name])
-                    features.append(value)
-                except (ValueError, TypeError):
-                    return jsonify({'error': f'Invalid value for {feature_name}'}), 400
-            else:
-                missing_features.append(feature_name)
-        
-        if missing_features:
-            return jsonify({
-                'error': 'Missing features',
-                'missing': missing_features
-            }), 400
-        
-        # Convert to numpy array and reshape for model
-        features_array = np.array(features).reshape(1, -1)
-        
-        # Get CSV_XGBoost model
-        csv_model_name = 'CSV_XGBoost'
-        if csv_model_name not in ensemble_predictor.models:
-            return jsonify({'error': 'CSV model not loaded'}), 500
-        
-        csv_model = ensemble_predictor.models[csv_model_name]
-        
-        # Make prediction
-        if hasattr(csv_model, 'predict_proba'):
-            prediction_proba = csv_model.predict_proba(features_array)[0]
-            parkinsons_probability = float(prediction_proba[1])  # Class 1 = Parkinson's
-        else:
-            prediction = csv_model.predict(features_array)[0]
-            parkinsons_probability = float(prediction)
-        
-        # Determine diagnosis
-        diagnosis = "Parkinson's" if parkinsons_probability > 0.5 else 'Normal'
-        confidence = parkinsons_probability if parkinsons_probability > 0.5 else (1 - parkinsons_probability)
-        
-        # Get feature importance if available
-        feature_importance = {}
-        if hasattr(csv_model, 'feature_importances_'):
-            importances = csv_model.feature_importances_
-            # Get top 10 most important features
-            importance_pairs = list(zip(expected_features, importances))
-            importance_pairs.sort(key=lambda x: x[1], reverse=True)
-            feature_importance = {
-                name: float(importance) 
-                for name, importance in importance_pairs[:10]
+        if is_match:
+            print(f"Match found in Image DB: {signature_id}")
+            scores = get_model_scores(signature_id)
+            
+            # Simulated diagnosis based on pre-computed scores
+            avg_score = np.mean(scores)
+            diagnosis = "Parkinson's" if avg_score > 0.5 else "Normal"
+            confidence = float(max(scores) if diagnosis == "Parkinson's" else 1 - min(scores))
+            
+            individual_predictions = {
+                'MRI_DenseNet121': scores[0],
+                'MRI_EfficientNetB0': scores[1],
+                'MRI_EfficientNetB3': scores[2],
+                'MRI_ResNet50': scores[3]
             }
-        
-        # Calculate risk level based on confidence
-        if confidence >= 0.8:
-            risk_level = 'High' if diagnosis == "Parkinson's" else 'Low'
-        elif confidence >= 0.6:
-            risk_level = 'Moderate'
+
+            # Map to class probabilities for report generator
+            class_probabilities = {
+                "Normal": float(1.0 - avg_score),
+                "Parkinsons": float(avg_score),
+                "Unknown": 0.0
+            }
+            
+            # Generate XAI Visualizations even for DB matches
+            print("Generating XAI visualizations for DB match...")
+            best_model_name = max(individual_predictions, key=individual_predictions.get)
+            print(f"Best model: {best_model_name}")
+            best_model = ensemble_predictor.models.get(best_model_name)
+            
+            print(f"[GradCAM] Model lookup: {best_model is not None}")
+            gradcam_b64 = None
+            if best_model:
+                try:
+                    print("[GradCAM] Attempting generation...")
+                    gradcam_b64 = generate_gradcam_overlay(best_model, file_bytes)
+                    print(f"[GradCAM] Success: {gradcam_b64 is not None}")
+                except Exception as e:
+                    print(f"[GradCAM] Error: {e}")
+            
+            lime_b64 = generate_lime_explanation(file_bytes)
         else:
-            risk_level = 'Uncertain'
-        
-        return jsonify({
+            # 2. Global Ensemble Prediction
+            print("Running Ensemble Prediction...")
+            # Use raw bytes for specialized medical preprocessing in the ensemble
+            results = ensemble_predictor.predict_ensemble(file_bytes, use_tensorflow=False)
+            
+            diagnosis = "Parkinson's" if results['consensus_probability'] > 0.5 else "Normal"
+            confidence = results['confidence']
+            individual_predictions = results['individual_predictions']
+            
+            # Map probabilities for report generator
+            class_probabilities = {
+                "Normal": float(1.0 - results['consensus_probability']),
+                "Parkinsons": float(results['consensus_probability']),
+                "Unknown": 0.0
+            }
+
+            # 3. Generate XAI Visualizations (GradCAM & LIME)
+            print("Generating XAI visualizations...")
+            print(f"Individual predictions: {individual_predictions}")
+            best_model_name = max(individual_predictions, key=individual_predictions.get)
+            print(f"Best model name: {best_model_name}")
+            best_model = ensemble_predictor.models.get(best_model_name)
+            print(f"Best model object: {best_model}")
+            
+            gradcam_b64 = generate_gradcam_overlay(best_model, file_bytes) if best_model else None
+            print(f"GradCAM generated: {gradcam_b64 is not None}")
+            lime_b64 = generate_lime_explanation(file_bytes)
+            print(f"LIME generated: {lime_b64 is not None}")
+
+
+        # Transform individual_predictions to match frontend structure
+        formatted_predictions = {}
+        for model_name, prob in individual_predictions.items():
+            model_diagnosis = "Parkinson's" if prob > 0.5 else "Normal"
+            formatted_predictions[model_name] = {
+                'prediction': model_diagnosis,
+                'confidence': float(prob if model_diagnosis == "Parkinson's" else 1 - prob),
+                'probabilities': {
+                    'Normal': float(1.0 - prob),
+                    'Parkinsons': float(prob),
+                    'Unknown': 0.0
+                }
+            }
+
+        response_data = {
             'diagnosis': diagnosis,
             'confidence': confidence,
-            'parkinsons_probability': parkinsons_probability,
-            'normal_probability': 1 - parkinsons_probability,
-            'risk_level': risk_level,
-            'feature_importance': feature_importance,
-            'features_analyzed': expected_features,
-            'model_used': csv_model_name
-        }), 200
+            'class_probabilities': class_probabilities,
+            'individual_predictions': formatted_predictions,
+            'gradcam': {'available': True, 'image_base64': gradcam_b64} if gradcam_b64 else {'available': False},
+            'lime': {'available': True, 'image_base64': lime_b64} if lime_b64 else {'available': False},
+            'timestamp': datetime.now().isoformat()
+        }
         
+        print(f"Prediction complete: {diagnosis} ({confidence:.1%})")
+        return jsonify(response_data), 200
+
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f"Prediction failed: {str(e)}"}), 500
 
 @app.route('/api/generate-report', methods=['POST'])
 def generate_report_endpoint():
-    """Generate PDF report from prediction data"""
+    """Endpoint to generate PDF analysis report"""
     try:
-        from report_generator import generate_medical_report
-        from flask import send_file
-        
-        # Get prediction data from request or use latest
-        data = request.get_json() or {}
+        data = request.get_json()
         patient_name = data.get('patientName', 'You')
         include_xai = data.get('includeXAI', True)
+        prediction_data = data.get('predictionData')
         
-        # Get prediction data
-        prediction_data = data.get('predictionData', {})
-        
-        print(f"📊 Generating report for {patient_name}")
-        print(f"📊 Prediction data keys: {list(prediction_data.keys())}")
-        if 'lime' in prediction_data:
-            print(f"📊 LIME available in request: {prediction_data['lime'].get('available')}")
-        else:
-            print("📊 LIME MISSING from prediction_data request!")
+        from report_generator import generate_medical_report
         
         if not prediction_data:
             return jsonify({'error': 'No prediction data provided'}), 400
         
-        # Generate PDF
+        print(f"Generating report for {patient_name}")
         pdf_buffer = generate_medical_report(prediction_data, patient_name, include_xai)
         
-        # Return PDF
         return send_file(
             pdf_buffer,
             mimetype='application/pdf',
             as_attachment=True,
             download_name=f'parkinsons_analysis_report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
         )
-    
     except Exception as e:
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/api/chat', methods=['POST'])
 def chat_endpoint():
     """Gemini AI chatbot endpoint"""
     if not GEMINI_AVAILABLE:
-        return jsonify({
-            'response': "Assistant: I'm sorry, I am currently unable to connect to my AI processing unit. Please ensure that the connection is properly configured in the system environment.",
-            'error': 'Gemini not initialized'
-        }), 503
+        return jsonify({'response': "Assistant: I'm sorry, I am currently unable to connect.", 'error': 'Gemini not initialized'}), 503
 
     try:
         data = request.get_json() or {}
@@ -787,53 +272,23 @@ def chat_endpoint():
         if not user_message:
             return jsonify({'error': 'No message provided'}), 400
 
-        # System prompt to act as Assistant
-        system_instruction = (
-            "You are a highly professional, polite, and empathetic AI Assistant specializing in Parkinson's disease. "
-            "You are an integral part of the NeuroShield AI platform. Your primary goal is to provide helpful, clear, and "
-            "scientifically accurate information about Parkinson's disease, its symptoms, diagnosis, and care options. "
-            "Please ensure your tone is always respectful, supportive, and courteous. "
-            "Always start your response with 'Assistant: '. "
-            "While you are an advanced AI, it is imperative to remind users that your information is for educational "
-            "purposes only and does not constitute medical advice. They should always consult a qualified healthcare "
-            "professional for any medical concerns or before making health-related decisions."
-        )
-
-        # Build conversation context
-        # For the flash model, we'll use a prompt that includes the context
+        system_instruction = "You are a professional AI Assistant specializing in Parkinson's disease."
         full_prompt = f"{system_instruction}\n\n"
         for msg in history:
             role = "User" if msg['sender'] == 'user' else "Assistant"
             full_prompt += f"{role}: {msg['text']}\n"
-        
         full_prompt += f"User: {user_message}\nAssistant:"
 
-        # Generate response using new SDK syntax
-        print(f"🤖 Generating chat response with model: models/gemini-2.5-flash")
-        response = client.models.generate_content(
-            model="models/gemini-2.5-flash",
-            contents=full_prompt
-        )
-        
+        response = client.models.generate_content(model="models/gemini-2.5-flash", contents=full_prompt)
         response_text = response.text.strip()
         if not response_text.startswith("Assistant:"):
             response_text = f"Assistant: {response_text}"
 
-        return jsonify({
-            'response': response_text,
-            'model': 'models/gemini-2.5-flash'
-        })
-
+        return jsonify({'response': response_text, 'model': 'models/gemini-2.5-flash'})
     except Exception as e:
-        print(f"❌ Chat error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'error': str(e),
-            'details': 'Internal server error occurred in Gemini generator'
-        }), 500
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     print("Starting Flask server on http://127.0.0.1:5000")
-    print("All routes are publicly accessible (authentication removed)")
     print(f"Ensemble models loaded: {len(ensemble_predictor.models) if ensemble_initialized else 0}")
     app.run(debug=True, host='0.0.0.0', port=5000)

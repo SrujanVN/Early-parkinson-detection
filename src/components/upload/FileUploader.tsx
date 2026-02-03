@@ -3,14 +3,17 @@ import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { Upload, X, Image, FileAudio, FileSpreadsheet, FileText } from 'lucide-react';
 import Button from '../ui/Button';
+import CSVFeatureForm from './CSVFeatureForm';
 
 type FileType = 'MRI' | 'Handwriting' | 'Audio' | 'CSV';
 
 interface FileUploaderProps {
   onFileUpload: (file: File, type: FileType) => void;
+  onCSVFeatureSubmit?: (features: Record<string, number>) => void;
+  isLoading?: boolean;
 }
 
-const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
+const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, onCSVFeatureSubmit, isLoading }) => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [fileType, setFileType] = useState<FileType>('MRI');
@@ -42,7 +45,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
-    
+
     const selectedFile = acceptedFiles[0];
     setFile(selectedFile);
     setError(null);
@@ -80,6 +83,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
     }
   };
 
+  const handleCSVSubmit = (features: Record<string, number>) => {
+    if (onCSVFeatureSubmit) {
+      onCSVFeatureSubmit(features);
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="mb-6">
@@ -92,13 +101,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
                 setFileType(type as FileType);
                 resetUpload();
               }}
-              className={`flex items-center justify-center p-3 rounded-xl border transition-all ${
-                fileType === type
-                  ? `bg-${config.color.split('-')[1]}/10 border-${
-                      config.color.split('-')[1]
-                    }/30 ${config.color}`
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+              className={`flex items-center justify-center p-3 rounded-xl border transition-all ${fileType === type
+                ? `bg-${config.color.split('-')[1]}/10 border-${config.color.split('-')[1]
+                }/30 ${config.color}`
+                : 'border-gray-200 hover:border-gray-300'
+                }`}
             >
               <div className="flex flex-col items-center">
                 {config.icon}
@@ -109,68 +116,73 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
         </div>
       </div>
 
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
-          isDragActive
+      {fileType === 'CSV' ? (
+        <div className="bg-card border rounded-2xl p-6">
+          <CSVFeatureForm onSubmit={handleCSVSubmit} isLoading={isLoading} />
+        </div>
+      ) : (
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${isDragActive
             ? 'border-primary bg-primary/5'
             : 'border-gray-300 hover:border-primary/50 hover:bg-gray-50'
-        }`}
-      >
-        <input {...getInputProps()} />
+            }`}
+        >
+          <input {...getInputProps()} />
 
-        {file ? (
-          <div className="space-y-4">
-            <div className="relative mx-auto">
-              {preview ? (
-                <img
-                  src={preview}
-                  alt="Preview"
-                  className="max-h-48 mx-auto rounded-lg object-contain"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-32 w-full">
-                  {fileTypeConfig[fileType].icon}
-                  <span className="ml-2 text-gray-600">{file.name}</span>
-                </div>
-              )}
+          {file ? (
+            <div className="space-y-4">
+              <div className="relative mx-auto">
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="max-h-48 mx-auto rounded-lg object-contain"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-32 w-full">
+                    {fileTypeConfig[fileType].icon}
+                    <span className="ml-2 text-gray-600">{file.name}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-center space-x-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<X size={16} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    resetUpload();
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
             </div>
-            <div className="flex justify-center space-x-3">
-              <Button
-                variant="outline"
-                size="sm"
-                icon={<X size={16} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  resetUpload();
-                }}
-              >
-                Remove
-              </Button>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <motion.div
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center"
+                >
+                  <Upload className="h-8 w-8 text-primary" />
+                </motion.div>
+              </div>
+              <div>
+                <p className="text-lg font-medium">
+                  Drag & drop your {fileType} file here
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  or click to browse from your device
+                </p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <motion.div
-                animate={{ y: [0, -5, 0] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center"
-              >
-                <Upload className="h-8 w-8 text-primary" />
-              </motion.div>
-            </div>
-            <div>
-              <p className="text-lg font-medium">
-                Drag & drop your {fileType} file here
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                or click to browse from your device
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="mt-3 text-error text-sm">
@@ -178,15 +190,24 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
         </div>
       )}
 
-      <div className="mt-6">
-        <Button
-          fullWidth
-          disabled={!file}
-          onClick={handleUpload}
-        >
-          Submit for  Analysis
-        </Button>
-      </div>
+      {fileType !== 'CSV' && (
+        <div className="mt-6">
+          <Button
+            fullWidth
+            disabled={!file || isLoading}
+            onClick={handleUpload}
+          >
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Analyzing...
+              </>
+            ) : (
+              'Submit for Analysis'
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

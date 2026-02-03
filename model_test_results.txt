@@ -1,0 +1,117 @@
+2025-12-19 23:53:56.965704: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-12-19 23:54:06.031465: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\keras\src\export\tf2onnx_lib.py:8: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "object"):
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\torchvision\models\_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\torchvision\models\_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator StandardScaler from version 1.6.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator SVC from version 1.6.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 1.6.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator DecisionTreeClassifier from version 1.6.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator RandomForestClassifier from version 1.6.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator LabelEncoder from version 1.6.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\sklearn\base.py:463: InconsistentVersionWarning: Trying to unpickle estimator VotingClassifier from version 1.6.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+======================================================================
+ENSEMBLE MODEL LOADING TEST
+======================================================================
+
+1. Python Environment Check
+----------------------------------------------------------------------
+Python Version: 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]
+Python Executable: C:\Users\sruja\Early-parkinson-detection\.venv_models\Scripts\python.exe
+
+2. Package Availability Check
+----------------------------------------------------------------------
+[OK] TensorFlow: 2.20.0
+[OK] PyTorch: 2.9.1+cpu
+[OK] NumPy: 2.2.6
+[OK] Scikit-learn: 1.8.0
+[OK] XGBoost: 3.1.2
+[OK] Joblib: 1.5.3
+
+3. Model Files Check
+----------------------------------------------------------------------
+[OK] MRI_DenseNet121                (pytorch   ) - 27.12 MB
+[OK] MRI_ResNet50                   (pytorch   ) - 90.00 MB
+[OK] MRI_EfficientNetB0             (pytorch   ) - 15.59 MB
+[OK] MRI_EfficientNetB3             (pytorch   ) - 41.35 MB
+[OK] Handwriting_HOG_SVM            (sklearn   ) - 58.87 MB
+[OK] Handwriting_LBP_RF             (sklearn   ) - 9.40 MB
+[OK] Handwriting_MobileNet_SVM      (sklearn   ) - 5.72 MB
+[OK] Handwriting_Ensemble           (sklearn   ) - 83.14 MB
+[OK] Voice_XGBoost                  (sklearn   ) - 0.08 MB
+[OK] Voice_RandomForest             (sklearn   ) - 0.73 MB
+[OK] Voice_SVM                      (sklearn   ) - 0.02 MB
+[OK] Voice_Ensemble                 (sklearn   ) - 1.66 MB
+[OK] CSV_XGBoost                    (sklearn   ) - 0.33 MB
+
+Found: 13/13 models
+
+4. Ensemble Predictor Loading Test
+----------------------------------------------------------------------
+[OK] Successfully imported ensemble_predictor module
+
+Attempting to initialize ensemble models...
+
+[OK] Loaded MRI_DenseNet121 (PyTorch) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_mri/best_densenet121.pth
+[OK] Loaded MRI_ResNet50 (PyTorch) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_mri/best_resnet50.pth
+[OK] Loaded MRI_EfficientNetB0 (PyTorch) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_mri/best_efficientnet_b0.pth
+[OK] Loaded MRI_EfficientNetB3 (PyTorch) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_mri/best_efficientnet_b3.pth
+[OK] Loaded Handwriting_HOG_SVM (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_handwriting/hog_svm_open_set.pkl
+[OK] Loaded Handwriting_LBP_RF (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_handwriting/lbp_rf_open_set.pkl
+[OK] Loaded Handwriting_MobileNet_SVM (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/Parkinson_handwriting/mobilenet_svm_open_set.pkl
+[ERROR] Error loading Handwriting_Ensemble: Can't get attribute 'ParkinsonEnsemble' on <module '__main__' from 'C:\\Users\\sruja\\Early-parkinson-detection\\backend\\test_model_loading.py'>
+[OK] Loaded Voice_XGBoost (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsons_voice/xgboost_parkinson_voice.pkl
+[OK] Loaded Voice_RandomForest (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsons_voice/random_forest_parkinson_voice.pkl
+[OK] Loaded Voice_SVM (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsons_voice/svm_parkinson_voice.pkl
+[OK] Loaded Voice_Ensemble (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsons_voice/ensemble_parkinson_voice.pkl
+[OK] Loaded CSV_XGBoost (sklearn/pickle) from C:\Users\sruja\Early-parkinson-detection\backend\models/parkinsions_csv/parkinson_xgboost.pkl
+
+[ENSEMBLE] 12/13 models loaded
+
+[OK] Ensemble models initialized successfully!
+
+Loaded Models Summary:
+----------------------------------------------------------------------
+Total Models Loaded: 12
+Is Ready: True
+
+Model Details:
+  - MRI_DenseNet121                (pytorch)
+  - MRI_ResNet50                   (pytorch)
+  - MRI_EfficientNetB0             (pytorch)
+  - MRI_EfficientNetB3             (pytorch)
+  - Handwriting_HOG_SVM            (sklearn)
+  - Handwriting_LBP_RF             (sklearn)
+  - Handwriting_MobileNet_SVM      (sklearn)
+  - Voice_XGBoost                  (sklearn)
+  - Voice_RandomForest             (sklearn)
+  - Voice_SVM                      (sklearn)
+  - Voice_Ensemble                 (sklearn)
+  - CSV_XGBoost                    (sklearn)
+
+======================================================================
+TEST COMPLETE
+======================================================================
+
+SUMMARY:
+----------------------------------------------------------------------
+[OK] All required packages are installed
+[OK] All model files are present
+

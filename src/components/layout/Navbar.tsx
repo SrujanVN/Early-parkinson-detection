@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-<<<<<<< HEAD
-import { motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
-=======
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Sun, Moon } from 'lucide-react';
->>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,13 +52,8 @@ const Navbar: React.FC = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
       className={`sticky top-0 z-50 ${scrolled
-<<<<<<< HEAD
-          ? 'bg-white shadow-md'
-          : 'bg-transparent'
-=======
         ? 'bg-card/80 backdrop-blur-lg shadow-md border-b border-divider'
         : 'bg-transparent'
->>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
         } transition-all duration-300`}
     >
       <div className="container mx-auto px-4 py-4">
@@ -75,20 +65,6 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
-<<<<<<< HEAD
-          <nav className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`font-medium hover:text-primary transition-colors ${location.pathname === link.path ? 'text-primary' : 'text-text'
-                  }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-=======
           <div className="hidden md:flex items-center space-x-8">
             <nav className="flex items-center space-x-6">
               {navLinks.map((link) => (
@@ -102,7 +78,6 @@ const Navbar: React.FC = () => {
                 </Link>
               ))}
             </nav>
->>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
 
             {/* Theme Toggle Button */}
             <button
@@ -148,28 +123,6 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* Mobile Navigation */}
-<<<<<<< HEAD
-        {isOpen && (
-          <motion.nav
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="md:hidden mt-4 py-4 space-y-4"
-          >
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`block py-2 font-medium hover:text-primary transition-colors ${location.pathname === link.path ? 'text-primary' : 'text-text'
-                  }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </motion.nav>
-        )}
-=======
         <AnimatePresence>
           {isOpen && (
             <motion.nav
@@ -192,7 +145,6 @@ const Navbar: React.FC = () => {
             </motion.nav>
           )}
         </AnimatePresence>
->>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
       </div>
     </motion.header>
   );

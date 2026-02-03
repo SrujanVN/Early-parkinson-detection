@@ -1,0 +1,189 @@
+
+Error predicting with Handwriting_HOG_SVM at 2026-01-07T14:59:11.821008:
+Traceback (most recent call last):
+  File "C:\Users\sruja\Early-parkinson-detection\backend\ensemble_predictor.py", line 155, in predict_single_model
+    proba = model.predict_proba(preprocessed_input)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\pipeline.py", line 722, in predict_proba
+    Xt = transform.transform(Xt)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\_set_output.py", line 273, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\preprocessing\_data.py", line 1043, in transform
+    X = self._validate_data(
+        ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\base.py", line 633, in _validate_data
+    out = check_array(X, input_name="X", **check_params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\validation.py", line 951, in check_array
+    array = _asarray_with_order(array, order=order, dtype=dtype, xp=xp)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\_array_api.py", line 521, in _asarray_with_order
+    array = numpy.asarray(array, order=order, dtype=dtype)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00d\x08\x02\x00\x00\x00\xff\x80\x02\x03\x00\x00\x00\xe8IDATx\x9c\xed\xd0\xc1\r\xc0 \x10\xc0\xb0\xd2\xfdw>V /\x84dO\x10e\xcd\xcc\xc7\x99\xffv\xc0K\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n6\xcf\xf1\x03\xc5\xca\xa6\xbch\x00\x00\x00\x00IEND\xaeB`\x82'
+
+Error predicting with Handwriting_LBP_RF at 2026-01-07T14:59:11.833775:
+Traceback (most recent call last):
+  File "C:\Users\sruja\Early-parkinson-detection\backend\ensemble_predictor.py", line 155, in predict_single_model
+    proba = model.predict_proba(preprocessed_input)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_forest.py", line 947, in predict_proba
+    X = self._validate_X_predict(X)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_forest.py", line 641, in _validate_X_predict
+    X = self._validate_data(
+        ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\base.py", line 633, in _validate_data
+    out = check_array(X, input_name="X", **check_params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\validation.py", line 951, in check_array
+    array = _asarray_with_order(array, order=order, dtype=dtype, xp=xp)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\_array_api.py", line 521, in _asarray_with_order
+    array = numpy.asarray(array, order=order, dtype=dtype)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00d\x08\x02\x00\x00\x00\xff\x80\x02\x03\x00\x00\x00\xe8IDATx\x9c\xed\xd0\xc1\r\xc0 \x10\xc0\xb0\xd2\xfdw>V /\x84dO\x10e\xcd\xcc\xc7\x99\xffv\xc0K\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n6\xcf\xf1\x03\xc5\xca\xa6\xbch\x00\x00\x00\x00IEND\xaeB`\x82'
+
+Error predicting with Handwriting_MobileNet_SVM at 2026-01-07T14:59:11.839873:
+Traceback (most recent call last):
+  File "C:\Users\sruja\Early-parkinson-detection\backend\ensemble_predictor.py", line 155, in predict_single_model
+    proba = model.predict_proba(preprocessed_input)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\pipeline.py", line 722, in predict_proba
+    Xt = transform.transform(Xt)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\_set_output.py", line 273, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\preprocessing\_data.py", line 1043, in transform
+    X = self._validate_data(
+        ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\base.py", line 633, in _validate_data
+    out = check_array(X, input_name="X", **check_params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\validation.py", line 951, in check_array
+    array = _asarray_with_order(array, order=order, dtype=dtype, xp=xp)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\_array_api.py", line 521, in _asarray_with_order
+    array = numpy.asarray(array, order=order, dtype=dtype)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00d\x08\x02\x00\x00\x00\xff\x80\x02\x03\x00\x00\x00\xe8IDATx\x9c\xed\xd0\xc1\r\xc0 \x10\xc0\xb0\xd2\xfdw>V /\x84dO\x10e\xcd\xcc\xc7\x99\xffv\xc0K\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n6\xcf\xf1\x03\xc5\xca\xa6\xbch\x00\x00\x00\x00IEND\xaeB`\x82'
+
+Error predicting with Voice_XGBoost at 2026-01-07T14:59:12.091571:
+Traceback (most recent call last):
+  File "C:\Users\sruja\Early-parkinson-detection\backend\ensemble_predictor.py", line 155, in predict_single_model
+    proba = model.predict_proba(preprocessed_input)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\sklearn.py", line 1632, in predict_proba
+    class_probs = super().predict(
+                  ^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\sklearn.py", line 1185, in predict
+    test = DMatrix(
+           ^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\core.py", line 730, in inner_f
+    return func(**kwargs)
+           ^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\core.py", line 857, in __init__
+    handle, feature_names, feature_types = dispatch_data_backend(
+                                           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\data.py", line 1131, in dispatch_data_backend
+    raise TypeError("Not supported type for data." + str(type(data)))
+TypeError: Not supported type for data.<class 'bytes'>
+
+Error predicting with Voice_RandomForest at 2026-01-07T14:59:12.099500:
+Traceback (most recent call last):
+  File "C:\Users\sruja\Early-parkinson-detection\backend\ensemble_predictor.py", line 155, in predict_single_model
+    proba = model.predict_proba(preprocessed_input)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_forest.py", line 947, in predict_proba
+    X = self._validate_X_predict(X)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_forest.py", line 641, in _validate_X_predict
+    X = self._validate_data(
+        ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\base.py", line 633, in _validate_data
+    out = check_array(X, input_name="X", **check_params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\validation.py", line 951, in check_array
+    array = _asarray_with_order(array, order=order, dtype=dtype, xp=xp)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\_array_api.py", line 521, in _asarray_with_order
+    array = numpy.asarray(array, order=order, dtype=dtype)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00d\x08\x02\x00\x00\x00\xff\x80\x02\x03\x00\x00\x00\xe8IDATx\x9c\xed\xd0\xc1\r\xc0 \x10\xc0\xb0\xd2\xfdw>V /\x84dO\x10e\xcd\xcc\xc7\x99\xffv\xc0K\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n6\xcf\xf1\x03\xc5\xca\xa6\xbch\x00\x00\x00\x00IEND\xaeB`\x82'
+
+Error predicting with Voice_SVM at 2026-01-07T14:59:12.106485:
+Traceback (most recent call last):
+  File "C:\Users\sruja\Early-parkinson-detection\backend\ensemble_predictor.py", line 155, in predict_single_model
+    proba = model.predict_proba(preprocessed_input)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\svm\_base.py", line 857, in predict_proba
+    X = self._validate_for_predict(X)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\svm\_base.py", line 607, in _validate_for_predict
+    X = self._validate_data(
+        ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\base.py", line 633, in _validate_data
+    out = check_array(X, input_name="X", **check_params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\validation.py", line 951, in check_array
+    array = _asarray_with_order(array, order=order, dtype=dtype, xp=xp)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\_array_api.py", line 521, in _asarray_with_order
+    array = numpy.asarray(array, order=order, dtype=dtype)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00d\x08\x02\x00\x00\x00\xff\x80\x02\x03\x00\x00\x00\xe8IDATx\x9c\xed\xd0\xc1\r\xc0 \x10\xc0\xb0\xd2\xfdw>V /\x84dO\x10e\xcd\xcc\xc7\x99\xffv\xc0K\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n6\xcf\xf1\x03\xc5\xca\xa6\xbch\x00\x00\x00\x00IEND\xaeB`\x82'
+
+Error predicting with Voice_Ensemble at 2026-01-07T14:59:12.116133:
+Traceback (most recent call last):
+  File "C:\Users\sruja\Early-parkinson-detection\backend\ensemble_predictor.py", line 155, in predict_single_model
+    proba = model.predict_proba(preprocessed_input)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_voting.py", line 409, in predict_proba
+    self._collect_probas(X), axis=0, weights=self._weights_not_none
+    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_voting.py", line 384, in _collect_probas
+    return np.asarray([clf.predict_proba(X) for clf in self.estimators_])
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_voting.py", line 384, in <listcomp>
+    return np.asarray([clf.predict_proba(X) for clf in self.estimators_])
+                       ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_forest.py", line 947, in predict_proba
+    X = self._validate_X_predict(X)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\ensemble\_forest.py", line 641, in _validate_X_predict
+    X = self._validate_data(
+        ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\base.py", line 633, in _validate_data
+    out = check_array(X, input_name="X", **check_params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\validation.py", line 951, in check_array
+    array = _asarray_with_order(array, order=order, dtype=dtype, xp=xp)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\sklearn\utils\_array_api.py", line 521, in _asarray_with_order
+    array = numpy.asarray(array, order=order, dtype=dtype)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00d\x08\x02\x00\x00\x00\xff\x80\x02\x03\x00\x00\x00\xe8IDATx\x9c\xed\xd0\xc1\r\xc0 \x10\xc0\xb0\xd2\xfdw>V /\x84dO\x10e\xcd\xcc\xc7\x99\xffv\xc0K\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n\xcc\n6\xcf\xf1\x03\xc5\xca\xa6\xbch\x00\x00\x00\x00IEND\xaeB`\x82'
+
+Error predicting with CSV_XGBoost at 2026-01-07T14:59:12.136476:
+Traceback (most recent call last):
+  File "C:\Users\sruja\Early-parkinson-detection\backend\ensemble_predictor.py", line 155, in predict_single_model
+    proba = model.predict_proba(preprocessed_input)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\sklearn.py", line 1632, in predict_proba
+    class_probs = super().predict(
+                  ^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\sklearn.py", line 1185, in predict
+    test = DMatrix(
+           ^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\core.py", line 730, in inner_f
+    return func(**kwargs)
+           ^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\core.py", line 857, in __init__
+    handle, feature_names, feature_types = dispatch_data_backend(
+                                           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sruja\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\xgboost\data.py", line 1131, in dispatch_data_backend
+    raise TypeError("Not supported type for data." + str(type(data)))
+TypeError: Not supported type for data.<class 'bytes'>

@@ -56,6 +56,12 @@ interface ResultCardProps {
 }
 
 const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = false, hideFooter = false }) => {
+  console.log("ResultCard Received Result:", result);
+  if (result) {
+    console.log("Individual Predictions:", result.individual_predictions);
+    console.log("GradCAM:", result.gradcam);
+  }
+
   if (isLoading) {
     return (
       <Card>
@@ -110,7 +116,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
     >
       <Card>
         <CardHeader
-          title="Diagnostic Summary"
+          title="Diagnostic Summary (v2)"
           subtitle={`Analysis based on ${fileType} data`}
         />
 
@@ -201,28 +207,30 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, fileType, isLoading = f
                   <div className="text-xs text-text/60 mt-1">Ensemble Confidence</div>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Individual Model Predictions */}
-              {result.individual_predictions && Object.keys(result.individual_predictions).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-divider">
-                  <p className="text-xs font-semibold text-text/80 mb-2">Individual Model Predictions:</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(result.individual_predictions).map(([model, pred]) => {
-                      const modelShort = model.replace('MRI_', '');
-                      return (
-                        <div key={model} className="bg-card border border-divider rounded-lg p-2 text-xs">
-                          <div className="font-medium text-text/70">{modelShort}:</div>
-                          <div className={`font-bold ${pred.prediction === "Parkinson's" ? 'text-warning' :
-                            pred.prediction === 'Normal' ? 'text-success' : 'text-text/50'
-                            }`}>
-                            {pred.prediction} ({(pred.confidence * 100).toFixed(1)}%)
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+          {/* Individual Model Predictions - Standalone Section */}
+          {result.individual_predictions && Object.keys(result.individual_predictions).length > 0 && (
+            <div className="mt-6 border border-divider rounded-xl p-4 bg-primary/5">
+              <h4 className="text-sm font-semibold mb-3 text-primary">
+                🤖 Individual Model Predictions
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(result.individual_predictions).map(([model, pred]) => {
+                  const modelShort = model.replace('MRI_', '');
+                  return (
+                    <div key={model} className="bg-card border border-divider rounded-lg p-2 text-xs">
+                      <div className="font-medium text-text/70">{modelShort}:</div>
+                      <div className={`font-bold ${pred.prediction === "Parkinson's" ? 'text-warning' :
+                        pred.prediction === 'Normal' ? 'text-success' : 'text-text/50'
+                        }`}>
+                        {pred.prediction} ({(pred.confidence * 100).toFixed(1)}%)
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

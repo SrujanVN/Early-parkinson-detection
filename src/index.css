@@ -50,11 +50,15 @@ body {
 }
 
 .message-highlight {
-  @apply font-bold text-primary bg-primary/5 px-1.5 py-0.5 rounded-md border border-primary/20 inline-block my-0.5;
+  @apply font-bold px-1.5 py-0.5 rounded-md inline-block my-0.5;
+  color: var(--primary);
+  background-color: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .glassmorphism {
-  @apply bg-card/10 backdrop-blur-sm border shadow-glass;
+  @apply backdrop-blur-sm border shadow-glass;
+  background-color: rgba(255, 255, 255, 0.1);
   border-color: var(--border);
 }
 
@@ -65,11 +69,14 @@ body {
 
 .scan-effect::before {
   content: '';
-  @apply absolute inset-0 bg-gradient-radial from-primary/20 to-transparent opacity-70 pointer-events-none;
+  @apply absolute inset-0 pointer-events-none;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%);
+  opacity: 0.7;
 }
 
 .scan-glow {
-  @apply absolute inset-0 bg-primary/10 animate-pulse-slow pointer-events-none;
+  @apply absolute inset-0 animate-pulse-slow pointer-events-none;
+  background-color: rgba(37, 99, 235, 0.1);
 }
 
 .chat-message {
@@ -77,10 +84,12 @@ body {
 }
 
 .user-message {
-  @apply bg-primary/10 ml-auto;
+  @apply ml-auto;
+  background-color: rgba(37, 99, 235, 0.1);
 }
 
 .bot-message {
-  @apply bg-card mr-auto shadow-sm border;
+  @apply mr-auto shadow-sm border;
+  background-color: var(--card);
   border-color: var(--border);
 }

@@ -1,0 +1,22 @@
+2025-12-19 23:49:26.375768: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-12-19 23:49:34.732484: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+C:\Users\sruja\Early-parkinson-detection\.venv_models\Lib\site-packages\keras\src\export\tf2onnx_lib.py:8: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "object"):
+Traceback (most recent call last):
+======================================================================
+ENSEMBLE MODEL LOADING TEST
+======================================================================
+
+1. Python Environment Check
+----------------------------------------------------------------------
+Python Version: 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]
+Python Executable: C:\Users\sruja\Early-parkinson-detection\.venv_models\Scripts\python.exe
+
+2. Package Availability Check
+----------------------------------------------------------------------
+  File "C:\Users\sruja\Early-parkinson-detection\backend\test_model_loading.py", line 35, in <module>
+    print(f"\u2713 TensorFlow: {tf.__version__}")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 0: character maps to <undefined>

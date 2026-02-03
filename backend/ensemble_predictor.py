@@ -5,6 +5,7 @@ Currently uses existing model, structured to easily add 4 models later
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 import os
+from datetime import datetime
 
 # Try to import TensorFlow
 try:
@@ -129,21 +130,12 @@ class EnsemblePredictor:
     def predict_single_model(self, model_name: str, preprocessed_input, model_type: str):
         """
         Get prediction from a single model
-        
-        Args:
-            model_name: Name of the model
-            preprocessed_input: Preprocessed image (numpy array or tensor)
-            model_type: 'tensorflow' or 'pytorch'
-        
-        Returns:
-            Prediction probability (float between 0 and 1)
         """
         model = self.models[model_name]
         
         try:
             if model_type == 'tensorflow':
                 prediction = model.predict(preprocessed_input, verbose=0)
-                # Assuming binary classification, get probability
                 if len(prediction.shape) > 1:
                     prob = float(prediction[0][0]) if prediction.shape[1] > 1 else float(prediction[0])
                 else:
@@ -152,10 +144,13 @@ class EnsemblePredictor:
                 
             elif model_type == 'pytorch':
                 from pytorch_prediction_helper import predict_pytorch_3class
-                return predict_pytorch_3class(model, preprocessed_input)
+                probs_dict = predict_pytorch_3class(model, preprocessed_input)
+                # Class 1 is Parkinson's in our training setup
+                if isinstance(probs_dict, dict):
+                    return probs_dict.get(1, 0.0)
+                return float(probs_dict)
             
             elif model_type == 'sklearn':
-                # sklearn models
                 if hasattr(model, 'predict_proba'):
                     proba = model.predict_proba(preprocessed_input)
                     return float(proba[0][1]) if proba.shape[1] == 2 else proba[0]
@@ -164,22 +159,17 @@ class EnsemblePredictor:
                     return float(pred[0])
                     
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            with open("prediction_errors.txt", "a") as f:
+                f.write(f"\nError predicting with {model_name} at {datetime.now().isoformat()}:\n")
+                f.write(error_details)
             print(f"Error predicting with {model_name}: {e}")
             return None
     
     def predict_ensemble(self, preprocessed_input, use_tensorflow: bool = True):
         """
         Get consensus prediction from all loaded models
-        
-        Args:
-            preprocessed_input: Preprocessed image
-            use_tensorflow: Whether input is TensorFlow format (True) or PyTorch (False)
-        
-        Returns:
-            Dict with:
-                - consensus_probability: Average probability across all models
-                - individual_predictions: Dict of model_name -> probability
-                - confidence: Standard deviation (lower = more confident)
         """
         if not self.is_loaded or len(self.models) == 0:
             raise ValueError("No models loaded. Load models first.")
@@ -187,24 +177,22 @@ class EnsemblePredictor:
         individual_predictions = {}
         probabilities = []
         
+        # Use a local copy to avoid per-model modifications affecting other models
+        current_input = preprocessed_input
+        
         for model_name in self.model_names:
             model_type = self.model_types[model_name]
             
-            # Convert input format if needed
+            # Convert input format if needed (only if current_input is not the right type)
+            model_input = current_input
             if use_tensorflow and model_type == 'pytorch':
-                # Convert numpy array to PyTorch tensor
-                if isinstance(preprocessed_input, np.ndarray):
-                    # For now, convert directly - proper preprocessing should be done before calling
-                    # In production, preprocess separately for each model type
-                    preprocessed_input = torch.from_numpy(preprocessed_input).float()
-                    # Apply ImageNet normalization if needed
-                    pass
+                if isinstance(model_input, np.ndarray):
+                    model_input = torch.from_numpy(model_input).float()
             elif not use_tensorflow and model_type == 'tensorflow':
-                # Convert PyTorch tensor to numpy
-                if isinstance(preprocessed_input, torch.Tensor):
-                    preprocessed_input = preprocessed_input.numpy()
+                if isinstance(model_input, torch.Tensor):
+                    model_input = model_input.numpy()
             
-            prob = self.predict_single_model(model_name, preprocessed_input, model_type)
+            prob = self.predict_single_model(model_name, model_input, model_type)
             
             if prob is not None:
                 individual_predictions[model_name] = prob
@@ -213,12 +201,9 @@ class EnsemblePredictor:
         if len(probabilities) == 0:
             raise ValueError("No valid predictions from any model")
         
-        # Calculate consensus (average)
         consensus_probability = np.mean(probabilities)
-        
-        # Calculate confidence (inverse of standard deviation)
         std_dev = np.std(probabilities)
-        confidence = 1.0 - min(std_dev, 1.0)  # Normalize to [0, 1]
+        confidence = 1.0 - min(std_dev, 1.0)
         
         return {
             'consensus_probability': float(consensus_probability),
@@ -245,90 +230,90 @@ ensemble_predictor = EnsemblePredictor()
 def initialize_ensemble_models():
     """
     Initialize ensemble models
-    Currently loads the existing model, ready to add 4 models later
     """
     global ensemble_predictor
     
-    # Model configurations for all modalities (no legacy .h5 model)
+    # Get the directory where this script is located
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    
     model_configs = [
         # MRI Models (PyTorch)
         {
             'name': 'MRI_DenseNet121',
-            'path': 'models/Parkinson_mri/best_densenet121.pth',
+            'path': os.path.join(backend_dir, 'models/Parkinson_mri/best_densenet121.pth'),
             'type': 'pytorch'
         },
         {
             'name': 'MRI_ResNet50',
-            'path': 'models/Parkinson_mri/best_resnet50.pth',
+            'path': os.path.join(backend_dir, 'models/Parkinson_mri/best_resnet50.pth'),
             'type': 'pytorch'
         },
         {
             'name': 'MRI_EfficientNetB0',
-            'path': 'models/Parkinson_mri/best_efficientnet_b0.pth',
+            'path': os.path.join(backend_dir, 'models/Parkinson_mri/best_efficientnet_b0.pth'),
             'type': 'pytorch'
         },
         {
             'name': 'MRI_EfficientNetB3',
-            'path': 'models/Parkinson_mri/best_efficientnet_b3.pth',
+            'path': os.path.join(backend_dir, 'models/Parkinson_mri/best_efficientnet_b3.pth'),
             'type': 'pytorch'
         },
-        # Handwriting Models (sklearn/pickle)
+        # Handwriting Models
         {
             'name': 'Handwriting_HOG_SVM',
-            'path': 'models/Parkinson_handwriting/hog_svm_open_set.pkl',
+            'path': os.path.join(backend_dir, 'models/Parkinson_handwriting/hog_svm_open_set.pkl'),
             'type': 'sklearn'
         },
         {
             'name': 'Handwriting_LBP_RF',
-            'path': 'models/Parkinson_handwriting/lbp_rf_open_set.pkl',
+            'path': os.path.join(backend_dir, 'models/Parkinson_handwriting/lbp_rf_open_set.pkl'),
             'type': 'sklearn'
         },
         {
             'name': 'Handwriting_MobileNet_SVM',
-            'path': 'models/Parkinson_handwriting/mobilenet_svm_open_set.pkl',
+            'path': os.path.join(backend_dir, 'models/Parkinson_handwriting/mobilenet_svm_open_set.pkl'),
             'type': 'sklearn'
         },
         {
             'name': 'Handwriting_Ensemble',
-            'path': 'models/Parkinson_handwriting/parkinson_ensemble_open_set.pkl',
+            'path': os.path.join(backend_dir, 'models/Parkinson_handwriting/parkinson_ensemble_open_set.pkl'),
             'type': 'sklearn'
         },
-        # Voice Models (sklearn/pickle)
+        # Voice Models
         {
             'name': 'Voice_XGBoost',
-            'path': 'models/parkinsons_voice/xgboost_parkinson_voice.pkl',
+            'path': os.path.join(backend_dir, 'models/parkinsons_voice/xgboost_parkinson_voice.pkl'),
             'type': 'sklearn'
         },
         {
             'name': 'Voice_RandomForest',
-            'path': 'models/parkinsons_voice/random_forest_parkinson_voice.pkl',
+            'path': os.path.join(backend_dir, 'models/parkinsons_voice/random_forest_parkinson_voice.pkl'),
             'type': 'sklearn'
         },
         {
             'name': 'Voice_SVM',
-            'path': 'models/parkinsons_voice/svm_parkinson_voice.pkl',
+            'path': os.path.join(backend_dir, 'models/parkinsons_voice/svm_parkinson_voice.pkl'),
             'type': 'sklearn'
         },
         {
             'name': 'Voice_Ensemble',
-            'path': 'models/parkinsons_voice/ensemble_parkinson_voice.pkl',
+            'path': os.path.join(backend_dir, 'models/parkinsons_voice/ensemble_parkinson_voice.pkl'),
             'type': 'sklearn'
         },
-        # CSV Model (XGBoost/pickle)
+        # CSV Model
         {
             'name': 'CSV_XGBoost',
-            'path': 'models/parkinsions_csv/parkinson_xgboost.pkl',
+            'path': os.path.join(backend_dir, 'models/parkinsions_csv/parkinson_xgboost.pkl'),
             'type': 'sklearn'
         }
     ]
     
-    # Filter out models that don't exist
     existing_configs = []
     for config in model_configs:
         if os.path.exists(config['path']):
             existing_configs.append(config)
         else:
-            print(f"⚠ Model file not found: {config['path']}")
+            print(f"[WARNING] Model file not found: {config['path']}")
     
     if len(existing_configs) > 0:
         ensemble_predictor.load_ensemble_models(existing_configs)

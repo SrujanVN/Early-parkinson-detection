@@ -40,8 +40,8 @@ def generate_medical_report(prediction_data, patient_name="You", include_xai=Tru
         'CustomTitle',
         parent=styles['Heading1'],
         fontSize=24,
-        textColor=colors.HexColor('#2C3E50'),
-        spaceAfter=10,
+        textColor=colors.HexColor('#2563eb'), # blue-600
+        spaceAfter=15,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold'
     )
@@ -50,7 +50,7 @@ def generate_medical_report(prediction_data, patient_name="You", include_xai=Tru
         'CustomHeading',
         parent=styles['Heading2'],
         fontSize=14,
-        textColor=colors.HexColor('#3498DB'),
+        textColor=colors.HexColor('#2563eb'),
         spaceAfter=12,
         spaceBefore=20,
         fontName='Helvetica-Bold'
@@ -95,9 +95,9 @@ def generate_medical_report(prediction_data, patient_name="You", include_xai=Tru
     
     patient_analysis_table = Table(patient_analysis_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
     patient_analysis_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#ECF0F1')),
-        ('BACKGROUND', (2, 0), (3, 0), colors.HexColor('#ECF0F1')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#2C3E50')),
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#eff6ff')), # blue-50
+        ('BACKGROUND', (2, 0), (3, 0), colors.HexColor('#eff6ff')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1e40af')), # blue-800
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
@@ -124,7 +124,7 @@ def generate_medical_report(prediction_data, patient_name="You", include_xai=Tru
     
     prob_table = Table(prob_data, colWidths=[1.5*inch, 1.5*inch, 3*inch])
     prob_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498DB')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2563eb')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -151,7 +151,7 @@ def generate_medical_report(prediction_data, patient_name="You", include_xai=Tru
     
     model_table = Table(model_data, colWidths=[2*inch, 2*inch, 2*inch])
     model_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498DB')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2563eb')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),

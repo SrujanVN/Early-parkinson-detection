@@ -107,12 +107,17 @@ def generate_gradcam_overlay(model, image_bytes, target_size=(224, 224)):
     try:
         from pytorch_prediction_helper import preprocess_for_pytorch
         
+        print("DEBUG: Starting GradCAM generation...")
         # Preprocess image
         input_tensor = preprocess_for_pytorch(image_bytes, target_size)
+        print(f"DEBUG: Image preprocessed. Tensor shape: {input_tensor.shape}")
         
         # Generate GradCAM
         gradcam = GradCAM(model)
+        print("DEBUG: GradCAM object created")
+        
         heatmap = gradcam.generate(input_tensor)
+        print(f"DEBUG: Heatmap generated. Shape: {heatmap.shape}")
         
         # Resize heatmap to match input size
         heatmap_resized = cv2.resize(heatmap, target_size)
@@ -136,10 +141,14 @@ def generate_gradcam_overlay(model, image_bytes, target_size=(224, 224)):
         buffer.seek(0)
         
         img_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+        print("DEBUG: GradCAM successfully encoded to base64")
         return f"data:image/png;base64,{img_base64}"
         
     except Exception as e:
+        import traceback
         print(f"GradCAM generation failed: {e}")
+        print(f"DEBUG: Full traceback:")
+        traceback.print_exc()
         return None
 
 

@@ -60,7 +60,6 @@ def predict_pytorch_3class(model, image_bytes):
         Dictionary with class probabilities {0: normal, 1: parkinsons, 2: unknown}
     """
     try:
-        # Try advanced preprocessing for noisy images
         from medical_image_preprocessing import preprocess_for_pytorch_with_denoising
         img_tensor = preprocess_for_pytorch_with_denoising(image_bytes)
     except Exception as e:

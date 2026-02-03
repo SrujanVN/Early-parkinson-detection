@@ -12,6 +12,7 @@ services:
       - ./backend/uploads:/app/uploads
     environment:
       - FLASK_ENV=production
+    command: python -u app.py
     restart: always
 
   frontend:

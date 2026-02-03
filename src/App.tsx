@@ -10,6 +10,9 @@ import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
 import ReportPage from './pages/ReportPage';
 import ChatbotPage from './pages/ChatbotPage';
+import CSVReportPage from './pages/CSVReportPage';
+import HandwritingReportPage from './pages/HandwritingReportPage';
+import AudioReportPage from './pages/AudioReportPage';
 
 // Components
 import Navbar from './components/layout/Navbar';
@@ -26,11 +29,10 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/upload" element={<UploadPage />} />
-<<<<<<< HEAD
-                <Route path="/hologram" element={<HologramPage />} />
-=======
->>>>>>> 66c1c2f (chatbot integrated,dark and light mode added hologram section removed)
                 <Route path="/report" element={<ReportPage />} />
+                <Route path="/csv-report" element={<CSVReportPage />} />
+                <Route path="/handwriting-report" element={<HandwritingReportPage />} />
+                <Route path="/audio-report" element={<AudioReportPage />} />
                 <Route path="/chatbot" element={<ChatbotPage />} />
               </Routes>
             </AnimatePresence>

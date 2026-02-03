@@ -1,8 +1,8 @@
 from flask import request, jsonify
-from voice_predictor import voice_predictor
-from voice_report_generator import voice_report_gen
 import os
 import uuid
+from voice_predictor import voice_predictor
+from voice_report_generator import voice_report_gen
 
 def register_voice_routes(app):
     @app.route('/api/predict/voice', methods=['POST'])
@@ -36,9 +36,8 @@ def register_voice_routes(app):
             result['report_pdf_base64'] = pdf_base64
             
             return jsonify(result)
-
         except Exception as e:
-            print(f"❌ Voice analysis error: {e}")
+            print(f"Voice analysis error: {e}")
             import traceback
             traceback.print_exc()
             return jsonify({'error': str(e)}), 500
