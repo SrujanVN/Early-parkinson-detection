@@ -1,4 +1,4 @@
-# 🧠 NeuroAid: Early Parkinson’s Detection & Analysis
+# 🧠 NeuroAid: Early Parkinson’s Detection & Analysisvia xAI 
 
 NeuroAid is a clinical-grade diagnostic support platform that utilizes **12 ensemble deep learning models** and **Explainable AI (XAI)** to detect early signs of Parkinson’s Disease. It analyzes MRI scans (with GradCAM/LIME), voice recordings, handwriting, and clinical data.
 
@@ -6,9 +6,14 @@ NeuroAid is a clinical-grade diagnostic support platform that utilizes **12 ense
 
 ## 🎥 Live Demo
 
-Check out the live demonstration of NeuroAid in action:
+Check out the live demonstration of  🧠 Early Parkinson’s Detection & Analysis via xAI in action:
 
-[![NeuroAid Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE)
+
+
+[![Watch the demo](https://img.youtube.com/vi/-2Xy-vN9HwQ/0.jpg)](https://youtu.be/-2Xy-vN9HwQ)
+
+> A quick walkthrough of the project in action.
+
 
 > **Note:** Since the project is not yet deployed, watch the video above to see the features in real-time.
 
